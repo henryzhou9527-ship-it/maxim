@@ -1,0 +1,13 @@
+{
+  "name": "maxim",
+  "version": "0.7.0",
+  "private": false,
+  "type": "module",
+  "description": "Maxim — a quiet personal console. Static front-end + Vercel serverless account/sync.",
+  "scripts": {
+    "check": "node --check api/accounts.js && node --check api/settings.js && node --check api/_shared/accounts.js"
+  },
+  "dependencies": {
+    "@vercel/blob": "^2.4.0"
+  }
+}

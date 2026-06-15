@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Maxim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <div class="status"><span id="clock">9:41</span><div class="dots"><span></span><span></span><span></span></div></div>
+
+      <div class="scroll" id="scroll">
+
+        <!-- ============ TODAY ============ -->
+        <section class="view on" data-view="today">
+          <header class="apphead">
+            <div class="brand">Maxim</div>
+            <div class="today" id="today"></div>
+          </header>
+
+          <section class="hero">
+            <img class="hero-img" src="assets/friedrich.jpg"
+                 alt="Wanderer above the Sea of Fog — Caspar David Friedrich, 1818" />
+            <div class="hero-scrim"></div>
+            <div class="hero-cap" id="hero-cap"></div>
+          </section>
+
+          <div class="block">
+            <div class="sec"><div class="l"><h3>Hold today</h3><span class="count" id="t-mx-count"></span></div><span class="hint">tap to honour</span></div>
+            <div id="t-maxims"></div>
+          </div>
+
+          <nav class="week" id="week" aria-label="Pick a day"></nav>
+
+          <div class="sched">
+            <input id="sched-input" placeholder="Schedule… “tomorrow 2pm read filings 45m”" maxlength="100" />
+            <button id="sched-go" aria-label="Make a draft block">Plan</button>
+          </div>
+          <div class="draftbar" id="draftbar" hidden></div>
+
+          <div class="timeline-wrap">
+            <div class="timeline" id="timeline"></div>
+          </div>
+
+          <div class="spark-chip" id="spark-chip" hidden></div>
+
+          <div class="block">
+            <div class="sec"><div class="l"><h3>Tasks due</h3><span class="count" id="t-tk-count"></span></div><span class="hint">tap ⊕ to schedule</span></div>
+            <div id="t-tasks"></div>
+          </div>
+
+          <div class="block">
+            <div class="sec"><div class="l"><h3>To-do</h3><span class="count" id="t-td-count"></span></div><span class="hint">just do</span></div>
+            <div class="todos" id="t-todos"></div>
+          </div>
+        </section>
+
+        <!-- ============ LAYERS ============ -->
+        <section class="view" data-view="layers">
+          <header class="viewhead">
+            <h1>Layers</h1>
+            <p>Everything you keep, by altitude — the rules you live by, the goals you're aiming at, the work with a deadline, the small things you just do.</p>
+          </header>
+
+          <div class="block">
+            <div class="sec"><div class="l"><h3>Maxims</h3><span class="count" id="l-mx-count"></span></div><span class="hint">lines to hold</span></div>
+            <div id="l-maxims"></div>
+            <div class="addrow"><input id="mx-input" placeholder="Add a maxim — a line to hold…" maxlength="80" /><button id="mx-add" aria-label="Add maxim">+</button></div>
+          </div>
+
+          <div class="block">
+            <div class="sec"><div class="l"><h3>Goals</h3><span class="count" id="l-gl-count"></span></div><span class="hint">deadline + workload</span></div>
+            <div id="l-goals"></div>
+            <div class="addrow"><input id="gl-input" placeholder="Add a goal… (e.g. Pass IELTS · 2026-08-30)" maxlength="90" /><button id="gl-add" aria-label="Add goal">+</button></div>
+          </div>
+
+          <div class="block">
+            <div class="sec"><div class="l"><h3>Tasks</h3><span class="count" id="l-tk-count"></span></div><span class="hint">deadlines</span></div>
+            <div id="l-tasks"></div>
+            <div class="addrow"><input id="tk-input" placeholder="Add a task… (e.g. Send memo · Fri · 60m)" maxlength="100" /><button id="tk-add" aria-label="Add task">+</button></div>
+          </div>
+
+          <div class="block">
+            <div class="sec"><div class="l"><h3>To-do</h3><span class="count" id="l-td-count"></span></div><span class="hint">just do</span></div>
+            <div class="todos" id="l-todos"></div>
+            <div class="addrow"><input id="td-input" placeholder="Add a quick to-do…" maxlength="80" /><button id="td-add" aria-label="Add to-do">+</button></div>
+          </div>
+
+          <div class="block">
+            <div class="sec"><div class="l"><h3>Sparks</h3><span class="count" id="l-sp-count"></span></div><span class="hint">sort into a layer</span></div>
+            <div id="l-sparks"></div>
+          </div>
+        </section>
+
+        <!-- ============ STREAKS ============ -->
+        <section class="view" data-view="streaks">
+          <header class="viewhead">
+            <h1>Streaks</h1>
+            <p>The cost of breaking a line, made visible — and how this week's hours stack up against your goals.</p>
+          </header>
+          <div class="subhead">Lines held</div>
+          <div id="s-list"></div>
+          <div class="subhead">Goals this week</div>
+          <div id="s-goals"></div>
+        </section>
+
+        <!-- ============ ME ============ -->
+        <section class="view" data-view="me">
+          <header class="viewhead">
+            <h1>Me</h1>
+            <p>Who the schedule is being built for. These shape where work can land.</p>
+          </header>
+          <div id="me-body"></div>
+        </section>
+
+      </div>
+
+      <!-- spark capture (global) -->
+      <button class="fab" id="fab" aria-label="Capture a spark">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.9 5.6L19.5 9l-4.3 3.5L16.6 18 12 14.8 7.4 18l1.4-5.5L4.5 9l5.6-1.4z"/></svg>
+      </button>
+
+      <!-- composer sheet -->
+      <div class="composer" id="composer">
+        <div class="sheet">
+          <div class="grip"></div>
+          <h4>Catch the spark</h4>
+          <p>Write the thought down now. Decide what it becomes after.</p>
+          <textarea id="sp-text" placeholder="“Block 30 min every morning to read filings.”"></textarea>
+          <div class="choose">
+            <button data-make="maxim">Maxim<small>a line to hold</small></button>
+            <button data-make="goal">Goal<small>aim at it</small></button>
+            <button data-make="task">Task<small>has a deadline</small></button>
+            <button data-make="todo">To-do<small>just do it</small></button>
+          </div>
+          <button class="cancel" id="sp-keep">Keep it as a spark for now</button>
+        </div>
+      </div>
+
+      <nav class="tabbar" id="tabbar">
+        <button class="tab on" data-view="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M3 9h18M8 2v4M16 2v4"/></svg><span>Today</span></button>
+        <button class="tab" data-view="layers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h10M4 18h7"/></svg><span>Layers</span></button>
+        <button class="tab" data-view="streaks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18l5-6 4 3 5-8 4 5"/><path d="M3 21h18"/></svg><span>Streaks</span></button>
+        <button class="tab" data-view="me"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span>Me</span></button>
+      </nav>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
