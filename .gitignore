@@ -2,5 +2,12 @@
 node_modules/
 .vercel
 .vercel/
+.env*
 .env*.local
 *.log
+www/
+*.apk
+android/
+_v_*.html
+_r_*.png
+_*.mjs

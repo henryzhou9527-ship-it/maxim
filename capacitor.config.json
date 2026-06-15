@@ -1,0 +1,12 @@
+{
+  "appId": "com.henryzhou.maxim",
+  "appName": "Maxim",
+  "webDir": "www",
+  "server": {
+    "url": "https://maxim-henryzhou9527-ship-its-projects.vercel.app",
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

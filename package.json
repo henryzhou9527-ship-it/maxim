@@ -5,9 +5,15 @@
   "type": "module",
   "description": "Maxim — a quiet personal console. Static front-end + Vercel serverless account/sync.",
   "scripts": {
-    "check": "node --check api/accounts.js && node --check api/settings.js && node --check api/_shared/accounts.js"
+    "check": "node --check api/accounts.js && node --check api/settings.js && node --check api/_shared/accounts.js",
+    "android:apk": "node scripts/build-android.mjs"
   },
   "dependencies": {
     "@vercel/blob": "^2.4.0"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0"
   }
 }

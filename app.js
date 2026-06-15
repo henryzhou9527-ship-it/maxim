@@ -27,13 +27,14 @@ function daysUntil(iso){
 function fmtDeadline(iso){
   if (!iso) return '';
   const d = new Date(iso + 'T00:00:00');
-  const md = `${d.getMonth()+1}月${d.getDate()}日`;
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const md = `${MON[d.getMonth()]} ${d.getDate()}`;
   const n = daysUntil(iso);
   let tail;
-  if (n < 0) tail = `已经过了 ${-n} 天`;
-  else if (n === 0) tail = '就在今天';
-  else if (n === 1) tail = '明天';
-  else tail = `还剩 ${n} 天`;
+  if (n < 0) tail = `${-n}d overdue`;
+  else if (n === 0) tail = 'today';
+  else if (n === 1) tail = 'tomorrow';
+  else tail = `${n}d left`;
   return `${md} · ${tail}`;
 }
 function addDaysIso(iso, n){ const d = new Date((iso||todayKey())+'T00:00:00'); d.setDate(d.getDate()+n); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
@@ -42,43 +43,43 @@ function addDaysIso(iso, n){ const d = new Date((iso||todayKey())+'T00:00:00'); 
 function defaultState(){
   return {
     view: 'home',
-    name: 'Zhang',
+    name: 'You',
     selDate: todayKey(),
     usage: { last: '', streak: 0, best: 0 },
     inbox: [
-      { id: uid('ib_'), text: '买个新的枕头', at: todayKey() },
-      { id: uid('ib_'), text: '以后想学点摄影', at: todayKey() },
+      { id: uid('ib_'), text: 'Buy a new pillow', at: todayKey() },
+      { id: uid('ib_'), text: 'Maybe learn photography', at: todayKey() },
     ],
     principles: [
-      { id: uid('pr_'), text: '晚上不吃零食', status:'on', note:'不是为了减肥，是想避开夜里失控、第二天后悔。' },
-      { id: uid('pr_'), text: 'no porn', status:'on', note:'' },
-      { id: uid('pr_'), text: '睡前不刷短视频', status:'on', note:'' },
-      { id: uid('pr_'), text: '少喝奶茶', status:'paused', note:'' },
+      { id: uid('pr_'), text: 'No snacking after dinner', status:'on', note:'Not about weight — about not losing the evening.' },
+      { id: uid('pr_'), text: 'Phone out of the bedroom', status:'on', note:'' },
+      { id: uid('pr_'), text: 'In bed by midnight', status:'on', note:'' },
+      { id: uid('pr_'), text: 'No doomscrolling', status:'paused', note:'' },
     ],
     todos: [
-      { id: uid('td_'), text: '拿快递', done:false },
-      { id: uid('td_'), text: '回 Alex 的消息', done:false },
+      { id: uid('td_'), text: 'Pick up the package', done:false },
+      { id: uid('td_'), text: 'Reply to Alex', done:false },
     ],
     projects: [
-      { id: uid('pj_'), title:'雅思', deadline:null, note:'先稳到 6.5，再冲 7。',
-        subs:[ {id:uid('s_'),text:'背完 List 1',done:true}, {id:uid('s_'),text:'做一次听力模考',done:true},
-               {id:uid('s_'),text:'整理错题',done:false}, {id:uid('s_'),text:'精听一篇 Section 3',done:false},
-               {id:uid('s_'),text:'练口语 Part 2',done:false}, {id:uid('s_'),text:'写一篇 Task 2',done:false} ], status:'active' },
-      { id: uid('pj_'), title:'作品集', deadline:null, note:'',
-        subs:[ {id:uid('s_'),text:'选 8 张主图',done:true}, {id:uid('s_'),text:'整理 reference',done:false},
-               {id:uid('s_'),text:'排版',done:false} ], status:'active' },
+      { id: uid('pj_'), title:'Learn French', deadline:null, note:'Conversational by spring.',
+        subs:[ {id:uid('s_'),text:'Finish unit 1',done:true}, {id:uid('s_'),text:'First speaking session',done:true},
+               {id:uid('s_'),text:'Review mistakes',done:false}, {id:uid('s_'),text:'Listen to one podcast',done:false},
+               {id:uid('s_'),text:'Practice 20 phrases',done:false}, {id:uid('s_'),text:'Write a short diary',done:false} ], status:'active' },
+      { id: uid('pj_'), title:'Portfolio', deadline:null, note:'',
+        subs:[ {id:uid('s_'),text:'Pick 8 key shots',done:true}, {id:uid('s_'),text:'Gather references',done:false},
+               {id:uid('s_'),text:'Lay it out',done:false} ], status:'active' },
       { id: uid('pj_'), title:'Essay', deadline: addDaysIso(todayKey(), 3), note:'',
-        subs:[ {id:uid('s_'),text:'找 3 篇文献',done:true}, {id:uid('s_'),text:'写 outline',done:true},
-               {id:uid('s_'),text:'写 introduction',done:false}, {id:uid('s_'),text:'写 body',done:false},
-               {id:uid('s_'),text:'写 conclusion',done:false}, {id:uid('s_'),text:'检查引用',done:false} ], status:'active' },
-      { id: uid('pj_'), title:'Presentation slides', deadline: addDaysIso(todayKey(), 1), note:'',
-        subs:[ {id:uid('s_'),text:'列大纲',done:true}, {id:uid('s_'),text:'做 10 页',done:false} ], status:'active' },
+        subs:[ {id:uid('s_'),text:'Find 3 sources',done:true}, {id:uid('s_'),text:'Write outline',done:true},
+               {id:uid('s_'),text:'Write intro',done:false}, {id:uid('s_'),text:'Write body',done:false},
+               {id:uid('s_'),text:'Write conclusion',done:false}, {id:uid('s_'),text:'Check citations',done:false} ], status:'active' },
+      { id: uid('pj_'), title:'Slides', deadline: addDaysIso(todayKey(), 1), note:'',
+        subs:[ {id:uid('s_'),text:'Outline',done:true}, {id:uid('s_'),text:'Build 10 pages',done:false} ], status:'active' },
     ],
     someday: [
-      { id: uid('sd_'), text:'练字', note:'' },
-      { id: uid('sd_'), text:'整理相册', note:'' },
-      { id: uid('sd_'), text:'看那本小说', note:'' },
-      { id: uid('sd_'), text:'试试做蛋糕', note:'' },
+      { id: uid('sd_'), text:'Learn to sketch', note:'' },
+      { id: uid('sd_'), text:'Sort old photos', note:'' },
+      { id: uid('sd_'), text:'Read that novel', note:'' },
+      { id: uid('sd_'), text:'Try baking', note:'' },
     ],
     archive: [],
   };
@@ -147,29 +148,29 @@ function saveAuth(meta){ localStorage.setItem(MX_AUTH_KEY, JSON.stringify({ ...m
 async function accountRequest(action, payload){
   const res = await fetch(ACCOUNTS_API, { method:'POST', headers:{ 'Content-Type':'application/json' }, body:JSON.stringify({ action, ...payload }) });
   const data = await res.json().catch(()=>({}));
-  if (!res.ok){ const e = new Error(data.error || '账号服务暂不可用'); e.status = res.status; throw e; }
+  if (!res.ok){ const e = new Error(data.error || 'Account service unavailable'); e.status = res.status; throw e; }
   return data;
 }
 async function fetchAccount(username){
   const res = await fetch(`${ACCOUNTS_API}?username=${encodeURIComponent(normUser(username))}`, { cache:'no-store' });
   const data = await res.json().catch(()=>({}));
-  if (!res.ok){ const e = new Error(data.error || '账号不存在'); e.status = res.status; throw e; }
+  if (!res.ok){ const e = new Error(data.error || 'Account not found'); e.status = res.status; throw e; }
   return data.account || null;
 }
 async function storeSessionKey(key){ const raw = await crypto.subtle.exportKey('raw', key); sessionStorage.setItem(MX_SESSION_KEY, b64enc(raw)); }
 
-function accountError(error, action='登录'){
+function accountError(error){
   const raw = String(error?.message || error || '');
-  if (error?.status === 409 || /already exists/i.test(raw)) return '这个用户名已经被注册了，直接登录或换一个。';
-  if (error?.status === 404 || /not found/i.test(raw)) return '云端没有这个账号，先创建一个。';
-  if (error?.status === 401 || /incorrect|invalid login/i.test(raw)) return '用户名或密码不对。';
-  if (error?.status === 503 || /not configured|unavailable|Failed to fetch/i.test(raw)) return '云服务暂时连不上（线上需要配置存储）。';
-  return `${action}失败：${raw}`;
+  if (error?.status === 409 || /already exists/i.test(raw)) return 'That username is taken. Log in or pick another.';
+  if (error?.status === 404 || /not found/i.test(raw)) return 'No such account — sign up first.';
+  if (error?.status === 401 || /incorrect|invalid login/i.test(raw)) return 'Wrong username or password.';
+  if (error?.status === 503 || /not configured|unavailable|Failed to fetch/i.test(raw)) return 'Cloud service unavailable right now.';
+  return raw || 'Something went wrong.';
 }
 
 async function accountRegister(username, password){
   const user = normUser(username);
-  if (!user) throw new Error('用户名用 3-40 位小写字母、数字、下划线或连字符。');
+  if (!user) throw new Error('Username: 3-40 lowercase letters, digits, _ or -.');
   const salt = crypto.getRandomValues(new Uint8Array(16));
   const key = await maximDeriveKey(password, salt);
   const saltText = b64enc(salt);
@@ -186,7 +187,7 @@ async function accountRegister(username, password){
 }
 async function accountLogin(username, password){
   const user = normUser(username);
-  if (!user) return { ok:false, error:'请输入 3-40 位用户名' };
+  if (!user) return { ok:false, error:'Enter a 3-40 character username' };
   try {
     const account = await fetchAccount(user);
     const salt = new Uint8Array(b64dec(account.salt));
@@ -236,19 +237,19 @@ function setSync(msg){ syncStatus = msg; if (state && state.view === 'me' && typ
 
 async function pullCloud(seedIfEmpty){
   if (!canSync()) return;
-  setSync('正在从云端同步…');
+  setSync('Syncing…');
   try {
     const res = await fetch(`${SETTINGS_API}?key=${SYNC_KEY}&user=${encodeURIComponent(currentUsername())}`, { cache:'no-store', headers:cloudHeaders() });
     if (res.ok){
       const data = await res.json();
-      if (data.value){ const cloud = await stateFromCloudValue(data.value); if (cloud){ state = cloud; await persistLocal(); bumpStreak(); setSync('已与云端同步。'); render(); return; } }
-      if (seedIfEmpty){ await pushCloud(true); setSync('已把本机数据上传到云端。'); }
-      else setSync('云端暂无数据，用的是本机。');
-    } else if (res.status === 401) setSync('云端登录失效，请重新登录。');
-    else setSync('云端暂时不可用，用的是本机。');
+      if (data.value){ const cloud = await stateFromCloudValue(data.value); if (cloud){ state = cloud; await persistLocal(); bumpStreak(); setSync('Synced'); render(); return; } }
+      if (seedIfEmpty){ await pushCloud(true); setSync('Synced'); }
+      else setSync('Using local data');
+    } else if (res.status === 401) setSync('Session expired — log in again.');
+    else setSync('Cloud unavailable — using local.');
   } catch (error){
-    if (/decrypt|envelope/i.test(String(error.message||error))){ cloudBlocked = true; setSync('云端数据无法用当前密码解开，已停止覆盖。'); }
-    else setSync('云端暂时连不上，用的是本机。');
+    if (/decrypt|envelope/i.test(String(error.message||error))){ cloudBlocked = true; setSync("Can't decrypt cloud data with this password — sync paused."); }
+    else setSync('Cloud unreachable — using local.');
   }
 }
 function schedulePush(){
@@ -258,11 +259,11 @@ function schedulePush(){
 }
 async function pushCloud(immediate){
   if (!canSync() || cloudBlocked) return;
-  setSync('正在保存到云端…');
+  setSync('Saving…');
   try {
     const res = await fetch(SETTINGS_API, { method:'POST', headers:{ 'Content-Type':'application/json', ...cloudHeaders() }, body:JSON.stringify({ key:SYNC_KEY, user:currentUsername(), value: await cloudValueFromState() }) });
-    setSync(res.ok ? '已保存并同步。' : '本机已存，云端同步被拒绝。');
-  } catch (e){ setSync('本机已存，云端暂时连不上。'); }
+    setSync(res.ok ? 'Synced' : 'Saved locally — cloud rejected it.');
+  } catch (e){ setSync('Saved locally — cloud unreachable.'); }
 }
 
 /* ---------- usage streak (daily-open; principles stay non-habit) ---------- */
@@ -287,16 +288,16 @@ const isAssignment = (p) => !!p.deadline;
 /* ===================================================================== */
 function archivePush(type, title, payload){ state.archive.unshift({ id: uid('ar_'), type, title, payload, at: todayKey() }); }
 
-function addInbox(text){ if(!text.trim()) return; state.inbox.unshift({ id:uid('ib_'), text:text.trim(), at:todayKey() }); save(); render(); flash('放进 Inbox 了'); }
+function addInbox(text){ if(!text.trim()) return; state.inbox.unshift({ id:uid('ib_'), text:text.trim(), at:todayKey() }); save(); render(); flash('Added to Inbox'); }
 function deleteInbox(id){ state.inbox = state.inbox.filter(x => x.id !== id); save(); render(); }
 function inboxSkip(id){ const i=state.inbox.findIndex(x=>x.id===id); if(i>=0){ const [it]=state.inbox.splice(i,1); state.inbox.push(it); save(); render(); } }
 
 function classifyInbox(id, type){
   const it = state.inbox.find(x => x.id === id); if (!it) return;
   const drop = () => { state.inbox = state.inbox.filter(x => x.id !== id); };
-  if (type === 'principle'){ state.principles.push({ id:uid('pr_'), text:it.text, status:'on', note:'' }); drop(); save(); render(); flash('放进原则'); }
-  else if (type === 'todo'){ state.todos.push({ id:uid('td_'), text:it.text, done:false }); drop(); save(); render(); flash('放进 Todo'); }
-  else if (type === 'someday'){ state.someday.push({ id:uid('sd_'), text:it.text, note:'' }); drop(); save(); render(); flash('放进有空做'); }
+  if (type === 'principle'){ state.principles.push({ id:uid('pr_'), text:it.text, status:'on', note:'' }); drop(); save(); render(); flash('Moved to Principles'); }
+  else if (type === 'todo'){ state.todos.push({ id:uid('td_'), text:it.text, done:false }); drop(); save(); render(); flash('Moved to To-do'); }
+  else if (type === 'someday'){ state.someday.push({ id:uid('sd_'), text:it.text, note:'' }); drop(); save(); render(); flash('Moved to Someday'); }
   else if (type === 'project'){ const pid = addProject(it.text, null); drop(); save(); render(); openDetail('project', pid); }
   else if (type === 'deadline'){ const pid = addProject(it.text, addDaysIso(todayKey(),7)); drop(); save(); render(); openDetail('project', pid); }
 }
@@ -321,7 +322,7 @@ function setProjectNote(id, note){ const p=getProject(id); if(p){ p.note=note; s
 function archiveProject(id){ const p=getProject(id); if(!p) return; archivePush(p.deadline?'assignment':'project', p.title, p); state.projects=state.projects.filter(x=>x.id!==id); save(); render(); }
 
 function addSomeday(text){ if(!text.trim()) return; state.someday.push({ id:uid('sd_'), text:text.trim(), note:'' }); save(); render(); }
-function somedayToTodo(id){ const s=state.someday.find(x=>x.id===id); if(!s) return; state.todos.push({ id:uid('td_'), text:s.text, done:false }); state.someday=state.someday.filter(x=>x.id!==id); save(); render(); flash('放进 Todo'); }
+function somedayToTodo(id){ const s=state.someday.find(x=>x.id===id); if(!s) return; state.todos.push({ id:uid('td_'), text:s.text, done:false }); state.someday=state.someday.filter(x=>x.id!==id); save(); render(); flash('Moved to To-do'); }
 function somedayToProject(id){ const s=state.someday.find(x=>x.id===id); if(!s) return; const pid=addProject(s.text,null); state.someday=state.someday.filter(x=>x.id!==id); save(); render(); openDetail('project', pid); }
 function archiveSomeday(id){ const s=state.someday.find(x=>x.id===id); if(!s) return; archivePush('someday', s.text, s); state.someday=state.someday.filter(x=>x.id!==id); save(); render(); }
 
@@ -332,7 +333,7 @@ function restore(arId){
   else if (a.type==='principle'){ state.principles.push(p); }
   else if (a.type==='someday'){ state.someday.push(p); }
   else { state.projects.push(p); }
-  state.archive = state.archive.filter(x=>x.id!==arId); save(); render(); flash('拿回来了');
+  state.archive = state.archive.filter(x=>x.id!==arId); save(); render(); flash('Restored');
 }
 function deleteArchive(id){ state.archive=state.archive.filter(x=>x.id!==id); save(); render(); }
 
@@ -377,8 +378,7 @@ async function init(){
   $('#tabbar').addEventListener('click', e => { const b=e.target.closest('[data-view]'); if(b) setView(b.dataset.view); });
   $('#fab').addEventListener('click', openCapture);
   ['capture','detail','sortflow'].forEach(id => { const el=$('#'+id); if(el) el.addEventListener('click', e=>{ if(e.target===el) closeOverlay(id); }); });
-  const tick=()=>{ const n=new Date(); $('#clock').textContent=`${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`; };
-  tick(); setInterval(tick, 60000);
+  /* (no fake status-bar clock — this is a real web app, not a phone mockup) */
 }
 document.addEventListener('DOMContentLoaded', init);
 
@@ -387,53 +387,62 @@ document.addEventListener('DOMContentLoaded', init);
    ===================================================================== */
 
 /* ---------- HOME ---------- */
-function hmSec(t){ return `<div class="hm-sec">${t}</div>`; }
+function hmSec(t, extra){ return `<div class="hm-sec"><span>${t}</span>${extra?`<em>${extra}</em>`:''}</div>`; }
 function renderHome(){
   const root = $('#v-home');
-  const wd = ['周日','周一','周二','周三','周四','周五','周六'];
+  const WD = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  const MO = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   const now = new Date();
-  const dateLabel = `${now.getMonth()+1}月${now.getDate()}日 ${wd[now.getDay()]}`;
+  const dateLabel = `${WD[now.getDay()]} · ${MO[now.getMonth()]} ${now.getDate()}`;
   const u = state.usage || { streak:0 };
+  const streakBit = (u.streak||0) > 0 ? ` · ${u.streak}-DAY STREAK` : '';
   let html = '';
 
-  // header: date + brand + usage streak
-  html += `<header class="hm-head">
-    <div><div class="hm-date">${escapeHtml(dateLabel)}</div><div class="hm-brand">Maxim</div></div>
-    <div class="hm-streak"><b>${u.streak||0}</b><span>天连续打开</span></div>
-  </header>`;
+  // painting hero — canvas + scrim + wordmark
+  html += `
+    <div class="hm-hero">
+      <img class="hm-img" src="assets/friedrich.jpg" alt="Wanderer above the Sea of Fog"/>
+      <div class="hm-scrim"></div>
+      <div class="hm-cap">
+        <div class="hm-ey">${dateLabel}${streakBit}</div>
+        <h2>Maxim</h2>
+      </div>
+    </div>`;
 
   // 留意 (nearest assignment deadlines, up to 2)
   const atts = state.projects.filter(p => isAssignment(p)).sort((a,b)=>daysUntil(a.deadline)-daysUntil(b.deadline)).slice(0,2);
   if (atts.length){
-    html += hmSec('留意') + '<div class="hm-list">';
+    html += hmSec('Due') + '<div class="hm-list">';
     atts.forEach(p => { const soon = daysUntil(p.deadline)<=2?' hm-soon':''; html += `<div class="hm-att${soon}" data-proj="${p.id}"><span>${escapeHtml(p.title)}</span><em>${escapeHtml(fmtDeadline(p.deadline))}</em></div>`; });
     html += '</div>';
   }
 
-  // Todo (open, up to 3)
-  const todos = state.todos.filter(t=>!t.done).slice(0,3);
-  html += hmSec('Todo');
-  if (todos.length){ html += '<div class="hm-list">'; todos.forEach(t => html += `<div class="hm-todo"><button class="hm-check" data-todo="${t.id}" aria-label="完成"></button><span>${escapeHtml(t.text)}</span></div>`); html += '</div>'; }
-  else html += '<div class="empty">没有待办了。</div>';
-
-  // 正在推进 (projects without deadline, up to 2)
-  const projs = state.projects.filter(p=>!isAssignment(p)).slice(0,2);
-  if (projs.length){
-    html += hmSec('正在推进') + '<div class="hm-list">';
-    projs.forEach(p => { const pr=progress(p); const ns=nextSub(p); html += `<div class="hm-proj" data-proj="${p.id}"><div class="hm-proj-t"><span>${escapeHtml(p.title)}</span><em>${pr.done}/${pr.total}</em></div><div class="hm-proj-n">下一步：${escapeHtml(ns?ns.text:'还没定')}</div></div>`; });
+  // Principles (on, up to 4) — the dark "rock" you stand on
+  const prins = state.principles.filter(p=>p.status==='on').slice(0,4);
+  if (prins.length){
+    html += hmSec('Principles') + '<div class="hm-rocks">';
+    prins.forEach(p => html += `<div class="hm-rock" data-prin="${p.id}"><span class="hm-rock-dot"></span><span class="hm-rock-t">${escapeHtml(p.text)}</span></div>`);
     html += '</div>';
   }
 
-  // 原则 (on, up to 3) — compact chips
-  const prins = state.principles.filter(p=>p.status==='on').slice(0,3);
-  if (prins.length){
-    html += hmSec('原则') + '<div class="hm-prins">' + prins.map(p=>`<span class="hm-prin" data-prin="${p.id}">${escapeHtml(p.text)}</span>`).join('') + '</div>';
+  // To-do (open, up to 3)
+  const todos = state.todos.filter(t=>!t.done).slice(0,3);
+  html += hmSec('To-do');
+  if (todos.length){ html += '<div class="hm-list">'; todos.forEach(t => html += `<div class="hm-todo"><button class="hm-check" data-todo="${t.id}" aria-label="done"></button><span>${escapeHtml(t.text)}</span></div>`); html += '</div>'; }
+  else html += '<div class="empty">Nothing to do.</div>';
+
+  // In progress (projects without deadline, up to 2)
+  const projs = state.projects.filter(p=>!isAssignment(p)).slice(0,2);
+  if (projs.length){
+    html += hmSec('In progress') + '<div class="hm-list">';
+    projs.forEach(p => { const pr=progress(p); const ns=nextSub(p); const pct=pr.total?Math.round(pr.done/pr.total*100):0; html += `<div class="hm-proj" data-proj="${p.id}"><div class="hm-proj-t"><span>${escapeHtml(p.title)}</span><em>${pr.done}/${pr.total}</em></div><div class="hm-pbar"><i style="width:${pct}%"></i></div><div class="hm-proj-n">Next — ${escapeHtml(ns?ns.text:'set a next step')}</div></div>`; });
+    html += '</div>';
   }
 
   root.innerHTML = html;
   $$('.hm-att', root).forEach(el => el.addEventListener('click', () => openDetail('project', el.dataset.proj)));
   $$('.hm-proj', root).forEach(el => el.addEventListener('click', () => openDetail('project', el.dataset.proj)));
-  $$('.hm-prin', root).forEach(el => el.addEventListener('click', () => openDetail('principle', el.dataset.prin)));
+  $$('.hm-rock', root).forEach(el => el.addEventListener('click', () => openDetail('principle', el.dataset.prin)));
   $$('.hm-check', root).forEach(el => el.addEventListener('click', e => { e.stopPropagation(); toggleTodo(el.dataset.todo); }));
 }
 
@@ -442,17 +451,17 @@ function renderInbox() {
   const root = $('#v-inbox');
   const n = state.inbox.length;
   let html = '';
-  html += '<header class="viewhead"><h1>Inbox</h1><div class="sub">脑子里冒出来的东西，先丢这儿，回头再分。</div></header>';
+  html += '<header class="viewhead"><h1>Inbox</h1></header>';
   if (n) {
     html += '<div class="ib-bar">';
-    html += '<span class="ib-count">未整理 ' + n + ' 条</span>';
-    html += '<button class="ib-tidy" type="button">理一理</button>';
+    html += '<span class="ib-count">' + n + ' unsorted</span>';
+    html += '<button class="ib-tidy" type="button">Sort</button>';
     html += '</div>';
     html += '<div class="ib-list">';
     for (const item of state.inbox) html += ibCard(item);
     html += '</div>';
   } else {
-    html += '<div class="empty">这里空着。想到什么，点右下角的 ＋ 丢进来。</div>';
+    html += '<div class="empty">Nothing here yet.</div>';
   }
   root.innerHTML = html;
   const tidy = $('.ib-tidy', root);
@@ -466,12 +475,12 @@ function renderInbox() {
 }
 function ibCard(item) {
   return '<div class="ib-card" data-id="' + escapeHtml(String(item.id)) + '">' +
-      '<button class="del" type="button" aria-label="删掉">✕</button>' +
+      '<button class="del" type="button" aria-label="delete">✕</button>' +
       '<div class="ib-card-text">' + escapeHtml(item.text) + '</div>' +
       ibActs('ib-acts') + '</div>';
 }
 function ibActs(cls) {
-  const types = [['principle','原则'],['todo','Todo'],['project','Project'],['someday','有空做'],['deadline','加 deadline']];
+  const types = [['principle','Principle'],['todo','To-do'],['project','Project'],['someday','Someday'],['deadline','+ Deadline']];
   let h = '<div class="' + cls + '">';
   for (const [type, label] of types) h += '<button class="ib-pill" type="button" data-type="' + type + '">' + label + '</button>';
   return h + '</div>';
@@ -480,16 +489,16 @@ function renderCapture() {
   const root = $('#capture');
   let html = '<div class="sheet">';
   html += '<div class="grip"></div>';
-  html += '<h4>想到什么？</h4>';
-  html += '<textarea class="cap-text" placeholder="随便写一句，待会儿再分类。"></textarea>';
-  html += '<button class="cap-save" type="button">先放进 Inbox</button>';
-  html += '<div class="cap-or">或者直接分到</div>';
+  html += '<h4>Capture</h4>';
+  html += '<textarea class="cap-text" placeholder="Write it down…"></textarea>';
+  html += '<button class="cap-save" type="button">Add to Inbox</button>';
+  html += '<div class="cap-or">or file as</div>';
   html += '<div class="cap-chips">';
-  html += '<button class="cap-chip" type="button" data-act="principle">原则</button>';
-  html += '<button class="cap-chip" type="button" data-act="todo">Todo</button>';
+  html += '<button class="cap-chip" type="button" data-act="principle">Principle</button>';
+  html += '<button class="cap-chip" type="button" data-act="todo">To-do</button>';
   html += '<button class="cap-chip" type="button" data-act="project">Project</button>';
-  html += '<button class="cap-chip" type="button" data-act="someday">有空做</button>';
-  html += '<button class="cap-chip" type="button" data-act="deadline">加 deadline</button>';
+  html += '<button class="cap-chip" type="button" data-act="someday">Someday</button>';
+  html += '<button class="cap-chip" type="button" data-act="deadline">+ Deadline</button>';
   html += '</div></div>';
   root.innerHTML = html;
   $('.cap-save', root).addEventListener('click', () => { addInbox($('.cap-text', root).value); closeOverlay('capture'); });
@@ -498,9 +507,9 @@ function renderCapture() {
       const t = $('.cap-text', root).value.trim();
       if (!t) { closeOverlay('capture'); return; }
       switch (chip.dataset.act) {
-        case 'principle': addPrinciple(t); closeOverlay('capture'); flash('放进原则'); break;
-        case 'todo': addTodo(t); closeOverlay('capture'); flash('放进 Todo'); break;
-        case 'someday': addSomeday(t); closeOverlay('capture'); flash('放进有空做'); break;
+        case 'principle': addPrinciple(t); closeOverlay('capture'); flash('Saved'); break;
+        case 'todo': addTodo(t); closeOverlay('capture'); flash('Saved'); break;
+        case 'someday': addSomeday(t); closeOverlay('capture'); flash('Saved'); break;
         case 'project': { const id = addProject(t, null); closeOverlay('capture'); openDetail('project', id); break; }
         case 'deadline': { const id = addProject(t, addDaysIso(todayKey(), 7)); closeOverlay('capture'); openDetail('project', id); break; }
       }
@@ -513,25 +522,25 @@ function renderSort() {
   let html = '';
   if (!state.inbox.length) {
     html += '<div class="sheet"><div class="grip"></div>';
-    html += '<div class="sort-empty">都整理完了。</div>';
-    html += '<button class="sort-done" type="button">好</button></div>';
+    html += '<div class="sort-empty">All sorted.</div>';
+    html += '<button class="sort-done" type="button">Done</button></div>';
     root.innerHTML = html;
     const done = $('.sort-done', root); if (done) done.addEventListener('click', () => closeOverlay('sortflow'));
     return;
   }
   const it = state.inbox[0];
   html += '<div class="sheet"><div class="grip"></div>';
-  html += '<button class="sort-x" type="button" aria-label="关闭">✕</button>';
-  html += '<div class="sort-left">还剩 ' + state.inbox.length + ' 条</div>';
+  html += '<button class="sort-x" type="button" aria-label="close">✕</button>';
+  html += '<div class="sort-left">' + state.inbox.length + ' left</div>';
   html += '<div class="sort-text">' + escapeHtml(it.text) + '</div>';
   html += '<div class="sort-acts">';
-  html += '<button class="sort-pill" type="button" data-type="principle">原则</button>';
-  html += '<button class="sort-pill" type="button" data-type="todo">Todo</button>';
+  html += '<button class="sort-pill" type="button" data-type="principle">Principle</button>';
+  html += '<button class="sort-pill" type="button" data-type="todo">To-do</button>';
   html += '<button class="sort-pill" type="button" data-type="project">Project</button>';
-  html += '<button class="sort-pill" type="button" data-type="someday">有空做</button>';
-  html += '<button class="sort-pill" type="button" data-type="deadline">加 deadline</button>';
+  html += '<button class="sort-pill" type="button" data-type="someday">Someday</button>';
+  html += '<button class="sort-pill" type="button" data-type="deadline">+ Deadline</button>';
   html += '</div>';
-  html += '<div class="sort-minor"><button class="sort-skip" type="button">跳过</button><button class="sort-del" type="button">删掉</button></div>';
+  html += '<div class="sort-minor"><button class="sort-skip" type="button">Skip</button><button class="sort-del" type="button">Delete</button></div>';
   html += '</div>';
   root.innerHTML = html;
   $$('.sort-acts [data-type]', root).forEach((btn) => btn.addEventListener('click', () => { classifyInbox(it.id, btn.dataset.type); renderSort(); }));
@@ -548,19 +557,19 @@ function renderItems() {
     ? prins.map(p => `
       <div class="it-prin${p.status === 'paused' ? ' it-muted' : ''}" data-id="${p.id}">
         <span class="it-prin-text">${escapeHtml(p.text)}</span>
-        <span class="it-tag ${p.status === 'paused' ? 'it-tag-paused' : 'it-tag-on'}">${p.status === 'paused' ? '暂停中' : '开启中'}</span>
+        <span class="it-tag ${p.status === 'paused' ? 'it-tag-paused' : 'it-tag-on'}">${p.status === 'paused' ? 'Paused' : 'On'}</span>
       </div>`).join('')
-    : `<div class="empty">还没有。写下一条你想守的原则。</div>`;
+    : `<div class="empty">No principles yet.</div>`;
 
   const todos = state.todos;
   const todoRows = todos.length
     ? todos.map(t => `
       <div class="it-todo${t.done ? ' it-done' : ''}" data-id="${t.id}">
-        <button class="it-check${t.done ? ' on' : ''}" data-act="toggle-todo" data-id="${t.id}" aria-label="完成"></button>
+        <button class="it-check${t.done ? ' on' : ''}" data-act="toggle-todo" data-id="${t.id}" aria-label="done"></button>
         <span class="it-todo-text">${escapeHtml(t.text)}</span>
-        <button class="del" data-act="rm-todo" data-id="${t.id}" aria-label="删除">×</button>
+        <button class="del" data-act="rm-todo" data-id="${t.id}" aria-label="delete">×</button>
       </div>`).join('')
-    : `<div class="empty">还没有。</div>`;
+    : `<div class="empty">Nothing here.</div>`;
 
   const projects = state.projects.filter(p => p.status === 'active' && !isAssignment(p));
   const projRows = projects.length
@@ -572,7 +581,7 @@ function renderItems() {
           <div class="it-bar"><i class="${full ? 'full' : ''}" style="width:${pct}%"></i></div>
         </div>`;
       }).join('')
-    : `<div class="empty">还没有项目。</div>`;
+    : `<div class="empty">No projects yet.</div>`;
 
   const asgs = state.projects.filter(p => p.status === 'active' && isAssignment(p)).sort((a, b) => daysUntil(a.deadline) - daysUntil(b.deadline));
   const asgRows = asgs.length
@@ -584,7 +593,7 @@ function renderItems() {
           <span class="it-deadline${soon ? ' it-soon' : ''}">${escapeHtml(fmtDeadline(p.deadline))}</span>
         </div>`;
       }).join('')
-    : `<div class="empty">还没有。</div>`;
+    : `<div class="empty">Nothing due.</div>`;
 
   const sds = state.someday;
   const sdRows = sds.length
@@ -592,39 +601,39 @@ function renderItems() {
       <div class="it-sd" data-id="${s.id}">
         <span class="it-sd-text">${escapeHtml(s.text)}</span>
         <div class="it-sd-acts">
-          <button class="it-mini" data-act="sd-today" data-id="${s.id}">今天做</button>
-          <button class="it-mini" data-act="sd-proj" data-id="${s.id}">做成 Project</button>
-          <button class="del" data-act="sd-arch" data-id="${s.id}" aria-label="归档">×</button>
+          <button class="it-mini" data-act="sd-today" data-id="${s.id}">Today</button>
+          <button class="it-mini" data-act="sd-proj" data-id="${s.id}">Project</button>
+          <button class="del" data-act="sd-arch" data-id="${s.id}" aria-label="archive">×</button>
         </div>
       </div>`).join('')
-    : `<div class="empty">还没有。想到什么以后想做的，丢这儿。</div>`;
+    : `<div class="empty">Nothing here yet.</div>`;
 
   root.innerHTML = `
-    <header class="viewhead"><h1>事项</h1><div class="sub">你存的所有东西，都在这儿管理。</div></header>
+    <header class="viewhead"><h1>Items</h1></header>
     <section class="it-block">
-      <div class="sec"><div class="l"><h3>原则</h3><span class="count">${prins.length}</span></div></div>
+      <div class="sec"><div class="l"><h3>Principles</h3><span class="count">${prins.length}</span></div></div>
       <div class="it-list">${prinRows}</div>
-      <div class="addrow"><input type="text" placeholder="写一条原则…" data-add="prin"><button data-add-btn="prin">＋</button></div>
+      <div class="addrow"><input type="text" placeholder="Add a principle" data-add="prin"><button data-add-btn="prin">＋</button></div>
     </section>
     <section class="it-block">
-      <div class="sec"><div class="l"><h3>Todo</h3><span class="count">${todos.length}</span></div></div>
+      <div class="sec"><div class="l"><h3>To-do</h3><span class="count">${todos.length}</span></div></div>
       <div class="it-list">${todoRows}</div>
-      <div class="addrow"><input type="text" placeholder="加一件要做的事…" data-add="todo"><button data-add-btn="todo">＋</button></div>
+      <div class="addrow"><input type="text" placeholder="Add a to-do" data-add="todo"><button data-add-btn="todo">＋</button></div>
     </section>
     <section class="it-block">
-      <div class="sec"><div class="l"><h3>Project</h3><span class="count">${projects.length}</span></div></div>
+      <div class="sec"><div class="l"><h3>Projects</h3><span class="count">${projects.length}</span></div></div>
       <div class="it-list">${projRows}</div>
-      <div class="addrow"><input type="text" placeholder="新建一个项目…" data-add="proj"><button data-add-btn="proj">＋</button></div>
+      <div class="addrow"><input type="text" placeholder="New project" data-add="proj"><button data-add-btn="proj">＋</button></div>
     </section>
     <section class="it-block">
-      <div class="sec"><div class="l"><h3>Assignment</h3><span class="count">${asgs.length}</span></div></div>
+      <div class="sec"><div class="l"><h3>Assignments</h3><span class="count">${asgs.length}</span></div></div>
       <div class="it-list">${asgRows}</div>
-      <div class="addrow"><input type="text" placeholder="新建有截止的事项…" data-add="asg"><button data-add-btn="asg">＋</button></div>
+      <div class="addrow"><input type="text" placeholder="New, with a deadline" data-add="asg"><button data-add-btn="asg">＋</button></div>
     </section>
     <section class="it-block">
-      <div class="sec"><div class="l"><h3>有空做</h3><span class="count">${sds.length}</span></div></div>
+      <div class="sec"><div class="l"><h3>Someday</h3><span class="count">${sds.length}</span></div></div>
       <div class="it-list">${sdRows}</div>
-      <div class="addrow"><input type="text" placeholder="以后有空再说…" data-add="sd"><button data-add-btn="sd">＋</button></div>
+      <div class="addrow"><input type="text" placeholder="Someday…" data-add="sd"><button data-add-btn="sd">＋</button></div>
     </section>`;
 
   const wireAdd = (key, fn) => {
@@ -659,13 +668,13 @@ function renderDetail(kind, id) {
     root.innerHTML = `
       <div class="sheet dt-sheet">
         <div class="grip"></div>
-        <div class="dt-head"><span class="dt-kind">原则</span><button class="dt-close" data-act="close">完成</button></div>
+        <div class="dt-head"><span class="dt-kind">Principle</span><button class="dt-close" data-act="close">Done</button></div>
         <input class="dt-title" value="${escapeHtml(p.text)}">
-        <div class="dt-status ${paused ? 'paused' : 'on'}">${paused ? '暂停中' : '开启中'}</div>
-        <textarea class="dt-note" placeholder="为什么要守这条？（可不填）">${escapeHtml(p.note || '')}</textarea>
+        <div class="dt-status ${paused ? 'paused' : 'on'}">${paused ? 'Paused' : 'On'}</div>
+        <textarea class="dt-note" placeholder="Why this one? (optional)">${escapeHtml(p.note || '')}</textarea>
         <div class="dt-actions">
-          ${paused ? `<button class="dt-btn" data-act="resume">重新开启</button>` : `<button class="dt-btn" data-act="pause">暂停</button>`}
-          <button class="dt-btn dt-ghost" data-act="archive">归档</button>
+          ${paused ? `<button class="dt-btn" data-act="resume">Resume</button>` : `<button class="dt-btn" data-act="pause">Pause</button>`}
+          <button class="dt-btn dt-ghost" data-act="archive">Archive</button>
         </div>
       </div>`;
     root.querySelector('[data-act="close"]').addEventListener('click', () => closeOverlay('detail'));
@@ -683,30 +692,30 @@ function renderDetail(kind, id) {
     const subRows = (p.subs && p.subs.length)
       ? p.subs.map(s => `
         <div class="dt-sub${s.done ? ' done' : ''}" data-sid="${s.id}">
-          <button class="dt-check${s.done ? ' on' : ''}" data-act="toggle-sub" data-sid="${s.id}" aria-label="完成"></button>
+          <button class="dt-check${s.done ? ' on' : ''}" data-act="toggle-sub" data-sid="${s.id}" aria-label="done"></button>
           <span class="dt-sub-text">${escapeHtml(s.text)}</span>
-          <button class="del" data-act="rm-sub" data-sid="${s.id}" aria-label="删除">×</button>
+          <button class="del" data-act="rm-sub" data-sid="${s.id}" aria-label="delete">×</button>
         </div>`).join('')
-      : `<div class="empty">还没有子任务。把它拆成下一步。</div>`;
+      : `<div class="empty">No steps yet.</div>`;
     const doneBanner = full ? `
       <div class="dt-done">
-        <div class="dt-done-msg">看着像是做完了。</div>
-        <div class="dt-done-acts"><button class="dt-btn" data-act="done-archive">归档</button><button class="dt-btn dt-ghost" data-act="done-keep">还要继续</button></div>
+        <div class="dt-done-msg">Looks done.</div>
+        <div class="dt-done-acts"><button class="dt-btn" data-act="done-archive">Archive</button><button class="dt-btn dt-ghost" data-act="done-keep">Keep going</button></div>
       </div>` : '';
     root.innerHTML = `
       <div class="sheet dt-sheet">
         <div class="grip"></div>
-        <div class="dt-head"><span class="dt-kind">${asg ? '有截止的事项' : '项目'}</span><button class="dt-close" data-act="close">完成</button></div>
+        <div class="dt-head"><span class="dt-kind">${asg ? 'Assignment' : 'Project'}</span><button class="dt-close" data-act="close">Done</button></div>
         <h3 class="dt-ptitle">${escapeHtml(p.title)}</h3>
-        <div class="dt-type">${asg ? '有截止的事项 · ' + escapeHtml(fmtDeadline(p.deadline)) : '项目（没有截止）'}</div>
+        <div class="dt-type">${asg ? 'Due ' + escapeHtml(fmtDeadline(p.deadline)) : 'No deadline'}</div>
         <div class="dt-progress"><div class="it-bar"><i class="${full ? 'full' : ''}" style="width:${pct}%"></i></div><span class="it-frac">${pr.done}/${pr.total}</span></div>
-        <div class="dt-next">下一步：${escapeHtml(next ? next.text : '还没定')}</div>
+        <div class="dt-next">Next — ${escapeHtml(next ? next.text : 'set a next step')}</div>
         ${doneBanner}
         <div class="dt-subs">${subRows}</div>
-        <div class="addrow"><input type="text" placeholder="加一个子任务…" data-add="sub"><button data-add-btn="sub">＋</button></div>
-        <textarea class="dt-note" placeholder="备注（可不填）">${escapeHtml(p.note || '')}</textarea>
-        <div class="dt-date-row"><label class="dt-date-lbl">截止</label><input type="date" class="dt-date" value="${p.deadline || ''}">${p.deadline ? `<button class="dt-btn dt-ghost dt-sm" data-act="rm-deadline">移除 deadline</button>` : ''}</div>
-        <div class="dt-actions"><button class="dt-btn dt-ghost" data-act="archive">归档</button></div>
+        <div class="addrow"><input type="text" placeholder="Add a step" data-add="sub"><button data-add-btn="sub">＋</button></div>
+        <textarea class="dt-note" placeholder="Notes (optional)">${escapeHtml(p.note || '')}</textarea>
+        <div class="dt-date-row"><label class="dt-date-lbl">Due</label><input type="date" class="dt-date" value="${p.deadline || ''}">${p.deadline ? `<button class="dt-btn dt-ghost dt-sm" data-act="rm-deadline">Remove deadline</button>` : ''}</div>
+        <div class="dt-actions"><button class="dt-btn dt-ghost" data-act="archive">Archive</button></div>
       </div>`;
     root.querySelector('[data-act="close"]').addEventListener('click', () => closeOverlay('detail'));
     root.querySelectorAll('[data-act="toggle-sub"]').forEach(el => el.addEventListener('click', () => { toggleSub(id, el.dataset.sid); renderDetail('project', id); }));
@@ -732,7 +741,9 @@ function renderCalendar(){
   const base = new Date(sel + 'T00:00:00');
   const dow = (base.getDay()+6)%7;
   const mon = new Date(base); mon.setDate(base.getDate()-dow);
-  const WD = ['一','二','三','四','五','六','日'];
+  const WD = ['M','T','W','T','F','S','S'];
+  const WDF = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const MOC = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const days = []; for (let i=0;i<7;i++){ const d=new Date(mon); d.setDate(mon.getDate()+i); days.push(keyOfDate(d)); }
 
   // assignments due, by day
@@ -747,19 +758,19 @@ function renderCalendar(){
   strip += '</div>';
 
   const selD = new Date(sel+'T00:00:00');
-  const dayLabel = `${selD.getMonth()+1}月${selD.getDate()}日 周${WD[(selD.getDay()+6)%7]}`;
+  const dayLabel = `${WDF[(selD.getDay()+6)%7]}, ${MOC[selD.getMonth()]} ${selD.getDate()}`;
   const items = dueOn(sel).slice().sort((a,b)=>0);
 
-  let agenda = `<div class="cal-dayhead">${dayLabel}${sel===todayKey()?' · 今天':''}</div>`;
+  let agenda = `<div class="cal-dayhead">${dayLabel}${sel===todayKey()?' · Today':''}</div>`;
   if (items.length){
     agenda += '<div class="cal-agenda">';
-    items.forEach(p => { const pr=progress(p); const soon=daysUntil(p.deadline)<=2?' cal-soon':''; agenda += `<div class="cal-item${soon}" data-proj="${p.id}"><span class="cal-rail"></span><div class="cal-item-b"><div class="cal-item-t">${escapeHtml(p.title)}</div><div class="cal-item-m">截止 · ${pr.done}/${pr.total}</div></div></div>`; });
+    items.forEach(p => { const pr=progress(p); const soon=daysUntil(p.deadline)<=2?' cal-soon':''; agenda += `<div class="cal-item${soon}" data-proj="${p.id}"><span class="cal-rail"></span><div class="cal-item-b"><div class="cal-item-t">${escapeHtml(p.title)}</div><div class="cal-item-m">Due · ${pr.done}/${pr.total}</div></div></div>`; });
     agenda += '</div>';
   } else {
-    agenda += '<div class="empty">这天没有截止的事。轻松点。</div>';
+    agenda += '<div class="empty">Nothing due.</div>';
   }
 
-  root.innerHTML = `<header class="viewhead"><h1>日历</h1><div class="sub">这一周有什么截止，挑一天看看。</div></header>` + strip + agenda;
+  root.innerHTML = `<header class="viewhead"><h1>Calendar</h1></header>` + strip + agenda;
   $$('.cal-day', root).forEach(el => el.addEventListener('click', () => { state.selDate = el.dataset.day; save(); renderCalendar(); }));
   $$('.cal-item', root).forEach(el => el.addEventListener('click', () => openDetail('project', el.dataset.proj)));
 }
@@ -774,42 +785,42 @@ function renderMe(){
   let acc;
   if (logged){
     acc = `<div class="me-card me-acc">
-      <div class="me-acc-top"><div><div class="me-acc-u">${escapeHtml(uname)}</div><div class="me-acc-s" id="sync-status">${escapeHtml(syncStatus||'已登录 · 云端同步开启')}</div></div>
-      <button class="me-btn ghost" id="logout">退出</button></div></div>`;
+      <div class="me-acc-top"><div><div class="me-acc-u">${escapeHtml(uname)}</div><div class="me-acc-s" id="sync-status">${escapeHtml(syncStatus||'Signed in · synced')}</div></div>
+      <button class="me-btn ghost" id="logout">Log out</button></div></div>`;
   } else {
     acc = `<div class="me-card me-acc">
-      <h4>账号 <span>登录后，数据端到端加密同步到云端</span></h4>
-      <input class="me-in" id="ac-user" placeholder="用户名（3-40 位小写字母/数字）" autocapitalize="off" />
-      <input class="me-in" id="ac-pass" type="password" placeholder="密码" />
-      <div class="me-acc-btns"><button class="me-btn" id="do-login">登录</button><button class="me-btn ghost" id="do-register">注册</button></div>
-      <div class="me-hint">密码只在本机参与加密，服务器看不到你的内容。换设备用同一账号登录即可。</div></div>`;
+      <h4>Account <span>End-to-end encrypted sync</span></h4>
+      <input class="me-in" id="ac-user" placeholder="Username" autocapitalize="off" />
+      <input class="me-in" id="ac-pass" type="password" placeholder="Password" />
+      <div class="me-acc-btns"><button class="me-btn" id="do-login">Log in</button><button class="me-btn ghost" id="do-register">Sign up</button></div>
+      <div class="me-hint">Your password never leaves this device. Sign in on another device to sync.</div></div>`;
   }
 
-  const streak = `<div class="me-card me-streak"><div class="me-stat"><b>${u.streak||0}</b><span>天连续打开</span></div><div class="me-stat"><b>${u.best||0}</b><span>最佳</span></div></div>`;
+  const streak = `<div class="me-card me-streak"><div class="me-stat"><b>${u.streak||0}</b><span>day streak</span></div><div class="me-stat"><b>${u.best||0}</b><span>best</span></div></div>`;
 
-  const profile = `<div class="me-card"><h4>名字</h4><input class="me-in" id="me-name" value="${escapeHtml(state.name||'')}" maxlength="24" /></div>`;
+  const profile = `<div class="me-card"><h4>Name</h4><input class="me-in" id="me-name" value="${escapeHtml(state.name||'')}" maxlength="24" /></div>`;
 
   const painting = `<div class="me-card me-paint">
     <img src="assets/friedrich.jpg" alt="Wanderer above the Sea of Fog"/>
-    <div class="me-paint-cap"><div>《雾海上的旅人》</div><div class="me-paint-sub">Caspar David Friedrich · 1818</div></div>
+    <div class="me-paint-cap"><div>Wanderer above the Sea of Fog</div><div class="me-paint-sub">Caspar David Friedrich · 1818</div></div>
   </div>`;
 
   const items = state.archive || [];
-  const archive = `<div class="me-card"><h4>归档 <span>${items.length} 条</span></h4>` +
-    (items.length ? '<div class="arc-list">' + items.map(arcCard).join('') + '</div>' : '<div class="empty">这里还空着。做完或收起来的东西会留在这。</div>') +
+  const archive = `<div class="me-card"><h4>Archive <span>${items.length}</span></h4>` +
+    (items.length ? '<div class="arc-list">' + items.map(arcCard).join('') + '</div>' : '<div class="empty">Nothing archived yet.</div>') +
     '</div>';
 
-  root.innerHTML = `<header class="viewhead"><h1>我</h1></header>` + acc + streak + profile + painting + archive;
+  root.innerHTML = `<header class="viewhead"><h1>You</h1></header>` + acc + streak + profile + painting + archive;
 
   // wire
   if (logged){ $('#logout').addEventListener('click', accountLogout); }
   else {
     const doAuth = async (fn) => {
       const user = $('#ac-user').value, pass = $('#ac-pass').value;
-      if (!pass){ flash('请输入密码'); return; }
-      flash('处理中…');
+      if (!pass){ flash('Enter a password'); return; }
+      flash('Working…');
       const r = await fn(user, pass);
-      if (r.ok){ flash('好了'); render(); } else { flash(r.error || '失败'); }
+      if (r.ok){ flash('Done'); render(); } else { flash(r.error || 'Failed'); }
     };
     $('#do-login').addEventListener('click', () => doAuth(accountLogin));
     $('#do-register').addEventListener('click', () => doAuth(accountRegister));
@@ -819,7 +830,7 @@ function renderMe(){
   $$('.arc-card .del', root).forEach(btn => btn.addEventListener('click', () => deleteArchive(btn.getAttribute('data-id'))));
 }
 function arcTypeLabel(type){
-  switch(type){ case 'todo': return 'Todo'; case 'principle': return '原则'; case 'project': return 'Project'; case 'assignment': return 'Assignment'; case 'someday': return '有空做'; default: return '记录'; }
+  switch(type){ case 'todo': return 'To-do'; case 'principle': return 'Principle'; case 'project': return 'Project'; case 'assignment': return 'Assignment'; case 'someday': return 'Someday'; default: return 'Item'; }
 }
 function arcCard(entry){
   const id = escapeHtml(String(entry.id));
@@ -827,6 +838,6 @@ function arcCard(entry){
     '<span class="arc-tag">' + escapeHtml(arcTypeLabel(entry.type)) + '</span>' +
     '<span class="arc-date">' + escapeHtml(entry.at || '') + '</span></div>' +
     '<div class="arc-title">' + escapeHtml(entry.title || '') + '</div></div>' +
-    '<div class="arc-actions"><button class="arc-restore" data-id="' + id + '" type="button">拿回来</button>' +
-    '<button class="del" data-id="' + id + '" type="button" aria-label="删除">✕</button></div></article>';
+    '<div class="arc-actions"><button class="arc-restore" data-id="' + id + '" type="button">Restore</button>' +
+    '<button class="del" data-id="' + id + '" type="button" aria-label="delete">✕</button></div></article>';
 }
