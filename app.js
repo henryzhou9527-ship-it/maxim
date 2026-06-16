@@ -174,7 +174,7 @@ async function fetchAccount(username){
   if (!res.ok){ const e = new Error(data.error || 'Account not found'); e.status = res.status; throw e; }
   return data.account || null;
 }
-async function storeSessionKey(key){ const raw = await crypto.subtle.exportKey('raw', key); sessionStorage.setItem(MX_SESSION_KEY, b64enc(raw)); }
+async function storeSessionKey(key){ const raw = await crypto.subtle.exportKey('raw', key); localStorage.setItem(MX_SESSION_KEY, b64enc(raw)); }
 
 function accountError(error){
   const raw = String(error?.message || error || '');
@@ -222,19 +222,22 @@ async function accountLogin(username, password){
 function accountLogout(){
   maximEncKey = null; maximAuthUser = ''; cloudBlocked = false;
   localStorage.removeItem(MX_AUTH_KEY); localStorage.removeItem(MX_ENC_KEY);
-  sessionStorage.removeItem(MX_SESSION_KEY);
+  localStorage.removeItem(MX_SESSION_KEY); sessionStorage.removeItem(MX_SESSION_KEY);
   persistLocal();   // write current state back as plaintext local
   syncStatus = ''; render();
 }
 async function trySessionRestore(){
-  const stored = sessionStorage.getItem(MX_SESSION_KEY);
+  // session key lives in localStorage so login survives closing the app;
+  // (fall back to the old sessionStorage location for already-logged-in users)
+  const stored = localStorage.getItem(MX_SESSION_KEY) || sessionStorage.getItem(MX_SESSION_KEY);
   const auth = loadAuth();
   if (!stored || !auth) return false;
   try {
     const key = await crypto.subtle.importKey('raw', b64dec(stored), { name:'AES-GCM', length:256 }, true, ['encrypt','decrypt']);
-    if (await maximCreateVerifier(key) !== auth.verifier){ sessionStorage.removeItem(MX_SESSION_KEY); return false; }
+    if (await maximCreateVerifier(key) !== auth.verifier){ localStorage.removeItem(MX_SESSION_KEY); sessionStorage.removeItem(MX_SESSION_KEY); return false; }
+    localStorage.setItem(MX_SESSION_KEY, stored);   // migrate/persist
     maximEncKey = key; maximAuthUser = auth.username; return true;
-  } catch (e){ sessionStorage.removeItem(MX_SESSION_KEY); return false; }
+  } catch (e){ localStorage.removeItem(MX_SESSION_KEY); sessionStorage.removeItem(MX_SESSION_KEY); return false; }
 }
 
 function currentUsername(){ return maximAuthUser || loadAuth()?.username || ''; }
