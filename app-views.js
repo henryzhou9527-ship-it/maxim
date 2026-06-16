@@ -346,5 +346,5 @@ function renderMe(){
   $$('.me-arc-list .arc-restore', root).forEach(btn => btn.addEventListener('click', () => restore(btn.getAttribute('data-id'))));
   $$('.me-arc-list .del', root).forEach(btn => btn.addEventListener('click', () => deleteArchive(btn.getAttribute('data-id'))));
 }
-function meArcType(type){ const map = { todo:'To-do', principle:'Principle', project:'Project', assignment:'Assignment', someday:'Someday' }; return map[type] || 'Item'; }
+function meArcType(type){ const map = { todo:'To-do', principle:'Principle', tip:'Tip', project:'Project', assignment:'Assignment', someday:'Someday' }; return map[type] || 'Item'; }
 function meArcCard(entry){ const id = escapeHtml(String(entry.id)); return '<article class="arc-card"><div class="arc-main"><div class="arc-meta"><span class="arc-tag">' + escapeHtml(meArcType(entry.type)) + '</span><span class="arc-date">' + escapeHtml(entry.at || '') + '</span></div><div class="arc-title">' + escapeHtml(entry.title || '') + '</div></div><div class="arc-actions"><button class="arc-restore" data-id="' + id + '" type="button">Restore</button><button class="del" data-id="' + id + '" type="button" aria-label="Delete">✕</button></div></article>'; }

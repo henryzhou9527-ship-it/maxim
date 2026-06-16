@@ -56,6 +56,11 @@ function defaultState(){
       { id: uid('pr_'), text: 'In bed by midnight', status:'on', note:'' },
       { id: uid('pr_'), text: 'No doomscrolling', status:'paused', note:'' },
     ],
+    tips: [
+      { id: uid('tp_'), text: 'Lock the water bottle before it goes in the bag', note:'Learned the soggy-notebook way.' },
+      { id: uid('tp_'), text: 'A glass of water first thing in the morning', note:'' },
+      { id: uid('tp_'), text: 'Two minutes tidying the desk before you start', note:'' },
+    ],
     todos: [
       { id: uid('td_'), text: 'Pick up the package', done:false },
       { id: uid('td_'), text: 'Reply to Alex', done:false },
@@ -107,7 +112,7 @@ function normalizeState(s){
   if (!s.selDate) s.selDate = todayKey();
   if (!s.usage) s.usage = { last:'', streak:0, best:0 };
   if (!s.name) s.name = 'You';
-  ['inbox','principles','todos','projects','someday','archive','routines','blocks','diary'].forEach(k => { if (!Array.isArray(s[k])) s[k] = []; });
+  ['inbox','principles','tips','todos','projects','someday','archive','routines','blocks','diary'].forEach(k => { if (!Array.isArray(s[k])) s[k] = []; });
   if (!s.reminders || typeof s.reminders!=='object') s.reminders = { enabled:false, everyMin:60, from:'09:00', to:'22:00', lastFired:'' };
   s.projects.forEach(p => { if (p.start === undefined) p.start = null; });
   if (['home','schedule','timeline','diary','items','me'].indexOf(s.view) < 0) s.view = 'home';
@@ -413,6 +418,12 @@ function editPrinciple(id, text){ const p=state.principles.find(x=>x.id===id); i
 function setPrincipleNote(id, note){ const p=state.principles.find(x=>x.id===id); if(p){ p.note=note; save(); render(); } }
 function archivePrinciple(id){ const p=state.principles.find(x=>x.id===id); if(!p) return; archivePush('principle', p.text, p); state.principles=state.principles.filter(x=>x.id!==id); save(); render(); }
 
+/* tips — a softer sibling of principles: not required, but help when kept */
+function addTip(text){ if(!text.trim()) return; state.tips.push({ id:uid('tp_'), text:text.trim(), note:'' }); save(); render(); }
+function editTip(id,text){ const t=state.tips.find(x=>x.id===id); if(t && text.trim()){ t.text=text.trim(); save(); render(); } }
+function setTipNote(id,note){ const t=state.tips.find(x=>x.id===id); if(t){ t.note=note; save(); render(); } }
+function removeTip(id){ const t=state.tips.find(x=>x.id===id); if(!t) return; archivePush('tip', t.text, t); state.tips=state.tips.filter(x=>x.id!==id); save(); render(); }
+
 function addTodo(text){ if(!text.trim()) return; state.todos.push({ id:uid('td_'), text:text.trim(), done:false }); save(); render(); }
 function toggleTodo(id){ const t=state.todos.find(x=>x.id===id); if(!t) return; t.done=true; archivePush('todo', t.text, t); state.todos=state.todos.filter(x=>x.id!==id); save(); render(); }
 function removeTodo(id){ state.todos=state.todos.filter(x=>x.id!==id); save(); render(); }
@@ -436,6 +447,7 @@ function restore(arId){
   if (a.type==='todo'){ p.done=false; state.todos.push(p); }
   else if (a.type==='principle'){ state.principles.push(p); }
   else if (a.type==='someday'){ state.someday.push(p); }
+  else if (a.type==='tip'){ state.tips.push(p); }
   else { state.projects.push(p); }
   state.archive = state.archive.filter(x=>x.id!==arId); save(); render(); flash('Restored');
 }
@@ -566,6 +578,14 @@ function renderHome(){
     html += '</div>';
   }
 
+  // Tips (soft, optional — lighter than principles)
+  const tips = state.tips.slice(0,3);
+  if (tips.length){
+    html += hmSec('Tips') + '<div class="hm-tips">';
+    tips.forEach(t => html += `<div class="hm-tip" data-tip="${t.id}"><span class="hm-tip-dot"></span><span class="hm-tip-t">${escapeHtml(t.text)}</span></div>`);
+    html += '</div>';
+  }
+
   // To-do (open, up to 3)
   const todos = state.todos.filter(t=>!t.done).slice(0,3);
   html += hmSec('To-do');
@@ -584,6 +604,7 @@ function renderHome(){
   $$('.hm-att', root).forEach(el => el.addEventListener('click', () => openDetail('project', el.dataset.proj)));
   $$('.hm-proj', root).forEach(el => el.addEventListener('click', () => openDetail('project', el.dataset.proj)));
   $$('.hm-rock', root).forEach(el => el.addEventListener('click', () => openDetail('principle', el.dataset.prin)));
+  $$('.hm-tip', root).forEach(el => el.addEventListener('click', () => openDetail('tip', el.dataset.tip)));
   $$('.hm-check', root).forEach(el => el.addEventListener('click', e => { e.stopPropagation(); toggleTodo(el.dataset.todo); }));
   const hero = $('.hm-hero', root); if (hero){ hero.style.cursor='pointer'; hero.setAttribute('title','You · stats'); hero.addEventListener('click', () => setView('me')); }
 }
@@ -703,6 +724,10 @@ function renderItems() {
       </div>`).join('')
     : `<div class="empty">No principles yet.</div>`;
 
+  const tipRows = state.tips.length
+    ? state.tips.map(t => `<div class="it-tip" data-id="${t.id}"><span class="it-tip-dot"></span><span class="it-tip-text">${escapeHtml(t.text)}</span></div>`).join('')
+    : `<div class="empty">No tips yet.</div>`;
+
   const todos = state.todos;
   const todoRows = todos.length
     ? todos.map(t => `
@@ -759,6 +784,11 @@ function renderItems() {
       <div class="addrow"><input type="text" placeholder="Add a principle" data-add="prin"><button data-add-btn="prin">＋</button></div>
     </section>
     <section class="it-block">
+      <div class="sec"><div class="l"><h3>Tips</h3><span class="count">${state.tips.length}</span></div><span class="hint">optional, but they help</span></div>
+      <div class="it-list">${tipRows}</div>
+      <div class="addrow"><input type="text" placeholder="Add a tip" data-add="tip"><button data-add-btn="tip">＋</button></div>
+    </section>
+    <section class="it-block">
       <div class="sec"><div class="l"><h3>To-do</h3><span class="count">${todos.length}</span></div></div>
       <div class="it-list">${todoRows}</div>
       <div class="addrow"><input type="text" placeholder="Add a to-do" data-add="todo"><button data-add-btn="todo">＋</button></div>
@@ -788,12 +818,14 @@ function renderItems() {
     input.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
   };
   wireAdd('prin', v => addPrinciple(v));
+  wireAdd('tip', v => addTip(v));
   wireAdd('todo', v => addTodo(v));
   wireAdd('proj', v => addProject(v, null));
   wireAdd('asg', v => { const id = addProject(v, addDaysIso(todayKey(), 7)); openDetail('project', id); });
   wireAdd('sd', v => addSomeday(v));
 
   root.querySelectorAll('.it-prin').forEach(el => el.addEventListener('click', () => openDetail('principle', el.dataset.id)));
+  root.querySelectorAll('.it-tip').forEach(el => el.addEventListener('click', () => openDetail('tip', el.dataset.id)));
   root.querySelectorAll('.it-proj, .it-asg').forEach(el => el.addEventListener('click', () => openDetail('project', el.dataset.id)));
   root.querySelectorAll('[data-act="toggle-todo"]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); toggleTodo(el.dataset.id); }));
   root.querySelectorAll('[data-act="rm-todo"]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); removeTodo(el.dataset.id); }));
@@ -828,6 +860,24 @@ function renderDetail(kind, id) {
     const pauseBtn = root.querySelector('[data-act="pause"]'); if (pauseBtn) pauseBtn.addEventListener('click', () => { pausePrinciple(id); renderDetail('principle', id); });
     const resumeBtn = root.querySelector('[data-act="resume"]'); if (resumeBtn) resumeBtn.addEventListener('click', () => { resumePrinciple(id); renderDetail('principle', id); });
     root.querySelector('[data-act="archive"]').addEventListener('click', () => { archivePrinciple(id); closeOverlay('detail'); });
+    return;
+  }
+  if (kind === 'tip') {
+    const t = state.tips.find(x => x.id === id);
+    if (!t) { closeOverlay('detail'); return; }
+    root.innerHTML = `
+      <div class="sheet dt-sheet">
+        <div class="grip"></div>
+        <div class="dt-head"><span class="dt-kind">Tip</span><button class="dt-close" data-act="close">Done</button></div>
+        <input class="dt-title" value="${escapeHtml(t.text)}">
+        <div class="dt-tipnote">A gentle nudge — not required, but things go smoother when you keep it.</div>
+        <textarea class="dt-note" placeholder="Why it helps (optional)">${escapeHtml(t.note || '')}</textarea>
+        <div class="dt-actions"><button class="dt-btn dt-ghost" data-act="remove">Remove</button></div>
+      </div>`;
+    root.querySelector('[data-act="close"]').addEventListener('click', () => closeOverlay('detail'));
+    root.querySelector('.dt-title').addEventListener('change', function(){ const v=this.value.trim(); if(v) editTip(id, v); });
+    root.querySelector('.dt-note').addEventListener('change', function(){ setTipNote(id, this.value); });
+    root.querySelector('[data-act="remove"]').addEventListener('click', () => { removeTip(id); closeOverlay('detail'); });
     return;
   }
   if (kind === 'project') {
