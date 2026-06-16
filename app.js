@@ -61,18 +61,18 @@ function defaultState(){
       { id: uid('td_'), text: 'Reply to Alex', done:false },
     ],
     projects: [
-      { id: uid('pj_'), title:'Learn French', deadline:null, note:'Conversational by spring.',
+      { id: uid('pj_'), title:'Learn French', deadline:null, start: addDaysIso(todayKey(), -28), note:'Conversational by spring.',
         subs:[ {id:uid('s_'),text:'Finish unit 1',done:true}, {id:uid('s_'),text:'First speaking session',done:true},
                {id:uid('s_'),text:'Review mistakes',done:false}, {id:uid('s_'),text:'Listen to one podcast',done:false},
                {id:uid('s_'),text:'Practice 20 phrases',done:false}, {id:uid('s_'),text:'Write a short diary',done:false} ], status:'active' },
-      { id: uid('pj_'), title:'Portfolio', deadline:null, note:'',
+      { id: uid('pj_'), title:'Portfolio', deadline: addDaysIso(todayKey(), 24), start: addDaysIso(todayKey(), -10), note:'',
         subs:[ {id:uid('s_'),text:'Pick 8 key shots',done:true}, {id:uid('s_'),text:'Gather references',done:false},
                {id:uid('s_'),text:'Lay it out',done:false} ], status:'active' },
-      { id: uid('pj_'), title:'Essay', deadline: addDaysIso(todayKey(), 3), note:'',
+      { id: uid('pj_'), title:'Essay', deadline: addDaysIso(todayKey(), 3), start: addDaysIso(todayKey(), -4), note:'',
         subs:[ {id:uid('s_'),text:'Find 3 sources',done:true}, {id:uid('s_'),text:'Write outline',done:true},
                {id:uid('s_'),text:'Write intro',done:false}, {id:uid('s_'),text:'Write body',done:false},
                {id:uid('s_'),text:'Write conclusion',done:false}, {id:uid('s_'),text:'Check citations',done:false} ], status:'active' },
-      { id: uid('pj_'), title:'Slides', deadline: addDaysIso(todayKey(), 1), note:'',
+      { id: uid('pj_'), title:'Slides', deadline: addDaysIso(todayKey(), 1), start: addDaysIso(todayKey(), -2), note:'',
         subs:[ {id:uid('s_'),text:'Outline',done:true}, {id:uid('s_'),text:'Build 10 pages',done:false} ], status:'active' },
     ],
     someday: [
@@ -81,6 +81,20 @@ function defaultState(){
       { id: uid('sd_'), text:'Read that novel', note:'' },
       { id: uid('sd_'), text:'Try baking', note:'' },
     ],
+    routines: [
+      { id: uid('rt_'), title:'Morning pages', cat:'reflection', days:[1,2,3,4,5], start:480, end:510 },
+      { id: uid('rt_'), title:'Workout', cat:'workout', days:[1,3,5], start:1080, end:1140 },
+    ],
+    blocks: [
+      { id: uid('bk_'), date: todayKey(), start:540,  end:660,  title:'Deep work — Essay',   cat:'deep',  plan:true, status:'done',    actual:{start:545,end:675}, routine:null, note:'' },
+      { id: uid('bk_'), date: todayKey(), start:780,  end:840,  title:'Lunch + walk',         cat:'life',  plan:true, status:'done',    actual:null, routine:null, note:'' },
+      { id: uid('bk_'), date: todayKey(), start:900,  end:1020, title:'French + review',      cat:'study', plan:true, status:'planned', actual:null, routine:null, note:'' },
+      { id: uid('bk_'), date: todayKey(), start:1080, end:1140, title:'Workout',              cat:'workout', plan:true, status:'planned', actual:null, routine:'seed', note:'' },
+    ],
+    diary: [
+      { id: uid('dy_'), at: new Date().toISOString(), text:'Kept all three lines today. The deep-work block in the morning is doing most of the work — protect it.', images:[] },
+    ],
+    reminders: { enabled:false, everyMin:60, from:'09:00', to:'22:00', lastFired:'' },
     archive: [],
   };
 }
@@ -93,7 +107,10 @@ function normalizeState(s){
   if (!s.selDate) s.selDate = todayKey();
   if (!s.usage) s.usage = { last:'', streak:0, best:0 };
   if (!s.name) s.name = 'You';
-  ['inbox','principles','todos','projects','someday','archive'].forEach(k => { if (!Array.isArray(s[k])) s[k] = []; });
+  ['inbox','principles','todos','projects','someday','archive','routines','blocks','diary'].forEach(k => { if (!Array.isArray(s[k])) s[k] = []; });
+  if (!s.reminders || typeof s.reminders!=='object') s.reminders = { enabled:false, everyMin:60, from:'09:00', to:'22:00', lastFired:'' };
+  s.projects.forEach(p => { if (p.start === undefined) p.start = null; });
+  if (['home','schedule','timeline','diary','items','me'].indexOf(s.view) < 0) s.view = 'home';
   return s;
 }
 async function loadLocalState(){
@@ -284,6 +301,90 @@ const progress = (p) => { const t=(p.subs||[]).length, d=(p.subs||[]).filter(s=>
 const isAssignment = (p) => !!p.deadline;
 
 /* ===================================================================== */
+/* v0.9 — schedule / routines / diary / reminders / stats               */
+/* ===================================================================== */
+const nowMin = () => { const n=new Date(); return n.getHours()*60 + n.getMinutes(); };
+const hhmm = (m) => `${String(Math.floor(m/60)).padStart(2,'0')}:${String(Math.round(m)%60).padStart(2,'0')}`;
+const parseHM = (s) => { const m=/^(\d{1,2}):(\d{2})$/.exec((s||'').trim()); return m? (+m[1])*60+(+m[2]) : null; };
+const DAY_START = 360, DAY_END = 1440, HOURPX = 46;
+const minToPx = (m) => (m - DAY_START)/60*HOURPX;
+const CATS = {
+  deep:{label:'Deep work',cls:'c-deep'}, study:{label:'Study',cls:'c-study'}, admin:{label:'Admin',cls:'c-admin'},
+  life:{label:'Life',cls:'c-life'}, workout:{label:'Workout',cls:'c-workout'}, reflection:{label:'Reflect',cls:'c-reflect'},
+  reward:{label:'Reward',cls:'c-reward'}, rest:{label:'Rest',cls:'c-rest'},
+};
+const CAT_KEYS = ['deep','study','admin','life','workout','reflection','reward','rest'];
+
+/* schedule blocks (a day's plan; blocks carry plan + optional actual) */
+function blocksOn(date){ return state.blocks.filter(b => b.date===date).slice().sort((a,b)=>a.start-b.start); }
+function layoutDay(items){
+  items.sort((a,b)=> a.start-b.start || a.end-b.end);
+  let group=[], groupEnd=-1;
+  const flush=()=>{ const cols=[]; group.forEach(b=>{ let placed=false; for(let c=0;c<cols.length;c++){ if(cols[c]<=b.start){ b._col=c; cols[c]=b.end; placed=true; break; } } if(!placed){ b._col=cols.length; cols.push(b.end); } }); group.forEach(b=>b._cols=cols.length); group=[]; groupEnd=-1; };
+  items.forEach(b=>{ if(group.length && b.start>=groupEnd) flush(); group.push(b); groupEnd=Math.max(groupEnd,b.end); });
+  if(group.length) flush();
+  return items;
+}
+const overlaps=(aS,aE,bS,bE)=> aS<bE && bS<aE;
+function findFreeSlot(date,dur,after){ let s=Math.max(DAY_START,Math.ceil((after??DAY_START)/15)*15); while(s+dur<=DAY_END){ if(!blocksOn(date).some(b=>overlaps(s,s+dur,b.start,b.end))) return s; s+=15; } return null; }
+function blockAdd(o){ const b={ id:uid('bk_'), date:o.date||state.selDate||todayKey(), start:o.start, end:o.end, title:(o.title||'Block').trim(), cat:o.cat||'deep', plan:true, status:'planned', actual:null, routine:o.routine||null, note:o.note||'' }; state.blocks.push(b); save(); render(); return b.id; }
+function blockUpdate(id,patch){ const b=state.blocks.find(x=>x.id===id); if(b){ Object.assign(b,patch); save(); render(); } }
+function blockCycleStatus(id){ const b=state.blocks.find(x=>x.id===id); if(!b) return; b.status = b.status==='planned'?'done':b.status==='done'?'skipped':'planned'; save(); render(); }
+function blockDelete(id){ state.blocks=state.blocks.filter(x=>x.id!==id); save(); render(); }
+function scheduleNext(title,dur,cat){ const date=state.selDate||todayKey(); const after=(date===todayKey())?nowMin():DAY_START; const s=findFreeSlot(date,dur||60,after); if(s==null){ flash('No free slot today'); return; } blockAdd({date,start:s,end:s+(dur||60),title,cat:cat||'deep'}); }
+
+/* routines (recurring templates that fill a day) */
+function routineAdd(o){ if(!o.title||o.start==null||o.end==null) return; state.routines.push({ id:uid('rt_'), title:o.title.trim(), cat:o.cat||'deep', days:o.days&&o.days.length?o.days:[1,2,3,4,5], start:o.start, end:o.end }); save(); render(); }
+function routineDelete(id){ state.routines=state.routines.filter(x=>x.id!==id); save(); render(); }
+function applyRoutinesToDay(date){
+  date = date || state.selDate || todayKey();
+  const wd=new Date(date+'T00:00:00').getDay();
+  let added=0;
+  state.routines.forEach(r=>{ if(r.days.includes(wd)){ if(!state.blocks.some(b=>b.date===date && b.routine===r.id)){ state.blocks.push({ id:uid('bk_'), date, start:r.start, end:r.end, title:r.title, cat:r.cat, plan:true, status:'planned', actual:null, routine:r.id, note:'' }); added++; } } });
+  save(); render(); flash(added?`Added ${added} routine block${added===1?'':'s'}`:'Routines already in');
+}
+
+/* diary (notes + images, newest first) */
+function diaryAdd(text,images){ text=(text||'').trim(); images=images||[]; if(!text && !images.length) return; state.diary.unshift({ id:uid('dy_'), at:new Date().toISOString(), text, images }); save(); render(); }
+function diaryDelete(id){ state.diary=state.diary.filter(x=>x.id!==id); save(); render(); }
+
+/* reminders — web Notification while the app is open (Capacitor LocalNotifications on device, see build note) */
+function notifReady(){ return typeof Notification!=='undefined' && Notification.permission==='granted'; }
+async function remindersEnable(){
+  if (typeof Notification==='undefined'){ flash('Notifications not supported here'); return; }
+  let perm = Notification.permission;
+  if (perm!=='granted') perm = await Notification.requestPermission();
+  state.reminders.enabled = (perm==='granted'); save(); render();
+  flash(state.reminders.enabled?'Reminders on':'Permission denied');
+}
+function remindersDisable(){ state.reminders.enabled=false; save(); render(); }
+function reminderTick(){
+  const r=state.reminders; if(!r || !r.enabled || !notifReady()) return;
+  const m=nowMin(); const from=parseHM(r.from)??540, to=parseHM(r.to)??1320;
+  if(m<from || m>to) return;
+  const tag=`${todayKey()}#${Math.floor(m/(r.everyMin||60))}`;
+  if(r.lastFired===tag) return;
+  r.lastFired=tag; save();
+  try{ new Notification('Maxim', { body:'What did you get done? Log it on your schedule.', tag:'maxim-update' }); }catch(e){}
+}
+
+/* stats */
+function statRange(n){ const a=[]; for(let i=n-1;i>=0;i--) a.push(addDaysIso(todayKey(),-i)); return a; }
+function blockStatsOn(date){ const bs=blocksOn(date); const done=bs.filter(b=>b.status==='done'); return { total:bs.length, done:done.length, mins:done.reduce((s,b)=>s+(b.end-b.start),0) }; }
+function stats(){
+  const u=state.usage||{streak:0,best:0};
+  return {
+    streak:u.streak||0, best:u.best||0,
+    principlesOn:state.principles.filter(p=>p.status==='on').length,
+    projectsActive:state.projects.filter(p=>p.status==='active').length,
+    todosOpen:state.todos.filter(t=>!t.done).length,
+    focusToday:Math.round(blockStatsOn(todayKey()).mins/60*10)/10,
+    diaryCount:state.diary.length,
+    week:statRange(7).map(d=>({date:d, mins:blockStatsOn(d).mins})),
+  };
+}
+
+/* ===================================================================== */
 /* DATA ACTIONS  (the only things that mutate state)                     */
 /* ===================================================================== */
 function archivePush(type, title, payload){ state.archive.unshift({ id: uid('ar_'), type, title, payload, at: todayKey() }); }
@@ -345,6 +446,10 @@ function closeOverlay(id){ const el=$('#'+id); if(el) el.classList.remove('open'
 function openCapture(){ if (typeof renderCapture==='function'){ renderCapture(); showOverlay('capture'); } }
 function openSort(){ if (typeof renderSort==='function'){ renderSort(); showOverlay('sortflow'); } }
 function openDetail(kind, id){ if (typeof renderDetail==='function'){ renderDetail(kind, id); showOverlay('detail'); } }
+function openBlockSheet(id){ if (typeof renderBlockSheet==='function'){ renderBlockSheet(id); showOverlay('blocksheet'); } }
+function openRoutines(){ if (typeof renderRoutines==='function'){ renderRoutines(); showOverlay('routinesheet'); } }
+function openDiaryComposer(){ if (typeof renderDiaryComposer==='function'){ renderDiaryComposer(); showOverlay('diarycomposer'); } }
+function openDiaryView(id){ if (typeof renderDiaryView==='function'){ renderDiaryView(id); showOverlay('diaryview'); } }
 
 function applyView(){
   $$('.view').forEach(v => v.classList.toggle('on', v.dataset.view === state.view));
@@ -359,8 +464,9 @@ function flash(msg){ const el=$('#flash'); if(!el) return; el.textContent=msg; e
 /* ---------- render dispatcher ---------- */
 function render(){
   if (typeof renderHome==='function') renderHome();
-  if (typeof renderCalendar==='function') renderCalendar();
-  if (typeof renderInbox==='function') renderInbox();
+  if (typeof renderSchedule==='function') renderSchedule();
+  if (typeof renderTimeline==='function') renderTimeline();
+  if (typeof renderDiary==='function') renderDiary();
   if (typeof renderItems==='function') renderItems();
   if (typeof renderMe==='function') renderMe();
   applyView();
@@ -376,9 +482,16 @@ async function init(){
   render();
   if (canSync()) pullCloud();
   $('#tabbar').addEventListener('click', e => { const b=e.target.closest('[data-view]'); if(b) setView(b.dataset.view); });
-  $('#fab').addEventListener('click', openCapture);
-  ['capture','detail','sortflow'].forEach(id => { const el=$('#'+id); if(el) el.addEventListener('click', e=>{ if(e.target===el) closeOverlay(id); }); });
-  /* (no fake status-bar clock — this is a real web app, not a phone mockup) */
+  $('#fab').addEventListener('click', onFab);
+  $$('.overlay').forEach(el => el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); }));
+  // reminders + live now-line on the schedule
+  setInterval(() => { reminderTick(); if (state.view==='schedule' && typeof renderSchedule==='function') renderSchedule(); }, 30000);
+}
+/* the FAB is contextual: capture on most screens, a new diary entry on Diary, a new block on Schedule */
+function onFab(){
+  if (state.view==='diary' && typeof openDiaryComposer==='function') return openDiaryComposer();
+  if (state.view==='schedule' && typeof openBlockSheet==='function') return openBlockSheet();
+  openCapture();
 }
 document.addEventListener('DOMContentLoaded', init);
 
@@ -444,6 +557,7 @@ function renderHome(){
   $$('.hm-proj', root).forEach(el => el.addEventListener('click', () => openDetail('project', el.dataset.proj)));
   $$('.hm-rock', root).forEach(el => el.addEventListener('click', () => openDetail('principle', el.dataset.prin)));
   $$('.hm-check', root).forEach(el => el.addEventListener('click', e => { e.stopPropagation(); toggleTodo(el.dataset.todo); }));
+  const hero = $('.hm-hero', root); if (hero){ hero.style.cursor='pointer'; hero.setAttribute('title','You · stats'); hero.addEventListener('click', () => setView('me')); }
 }
 
 /* ---------- INBOX + CAPTURE + SORT ---------- */
@@ -610,6 +724,7 @@ function renderItems() {
 
   root.innerHTML = `
     <header class="viewhead"><h1>Items</h1></header>
+    ${state.inbox.length ? `<section class="it-block"><div class="sec"><div class="l"><h3>Inbox</h3><span class="count">${state.inbox.length}</span></div><button class="ib-tidy" id="it-sort" type="button">Sort</button></div><div class="ib-list">${state.inbox.map(ibCard).join('')}</div></section>` : ''}
     <section class="it-block">
       <div class="sec"><div class="l"><h3>Principles</h3><span class="count">${prins.length}</span></div></div>
       <div class="it-list">${prinRows}</div>
@@ -657,6 +772,8 @@ function renderItems() {
   root.querySelectorAll('[data-act="sd-today"]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); somedayToTodo(el.dataset.id); }));
   root.querySelectorAll('[data-act="sd-proj"]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); somedayToProject(el.dataset.id); }));
   root.querySelectorAll('[data-act="sd-arch"]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); archiveSomeday(el.dataset.id); }));
+  const itSort = root.querySelector('#it-sort'); if (itSort) itSort.addEventListener('click', () => openSort());
+  root.querySelectorAll('.ib-card').forEach(card => { const id = card.dataset.id; card.querySelectorAll('.ib-acts [data-type]').forEach(btn => btn.addEventListener('click', () => classifyInbox(id, btn.dataset.type))); const del = card.querySelector('.del'); if (del) del.addEventListener('click', () => deleteInbox(id)); });
 }
 
 function renderDetail(kind, id) {

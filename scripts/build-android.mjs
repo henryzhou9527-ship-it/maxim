@@ -16,7 +16,7 @@ const run = (cmd, opts = {}) => { console.log(`\n> ${cmd}`); execSync(cmd, { std
 // 1. www/ fallback (the remote server.url is what actually loads at runtime)
 const www = path.join(ROOT, 'www');
 fs.mkdirSync(path.join(www, 'assets'), { recursive: true });
-for (const f of ['index.html', 'app.js', 'styles.css']) fs.copyFileSync(path.join(ROOT, f), path.join(www, f));
+for (const f of ['index.html', 'app.js', 'app-views.js', 'styles.css', 'views.css']) fs.copyFileSync(path.join(ROOT, f), path.join(www, f));
 fs.copyFileSync(path.join(ROOT, 'assets', 'friedrich.jpg'), path.join(www, 'assets', 'friedrich.jpg'));
 
 // 2. sdk location for gradle
