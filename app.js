@@ -472,6 +472,28 @@ function render(){
   applyView();
 }
 
+/* ---------- auto-update: reload when a new deploy is detected ---------- */
+let __bootSig = null;
+async function fetchSig(){
+  try {
+    const r = await fetch('version.json?t=' + Math.floor(Date.now()/30000), { cache:'no-store' });
+    if (r.ok){ const j = await r.json().catch(()=>null); if (j && j.build != null) return 'v:' + j.build; }
+  } catch(e){}
+  try { const r = await fetch('app-views.js', { method:'HEAD', cache:'no-store' }); const tag = r.headers.get('etag') || r.headers.get('last-modified'); if (tag) return 'e:' + tag; } catch(e){}
+  return null;
+}
+async function checkUpdate(){
+  const sig = await fetchSig();
+  if (sig == null) return;
+  if (__bootSig == null){ __bootSig = sig; return; }
+  if (sig !== __bootSig){
+    const busy = document.querySelector('.overlay.open') || (document.activeElement && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName));
+    if (busy){ flash('New version ready — reopen to update'); return; }
+    flash('Updating…');
+    setTimeout(() => { try { location.reload(); } catch(e){} }, 700);
+  }
+}
+
 /* ===================================================================== */
 /* INIT                                                                  */
 /* ===================================================================== */
@@ -481,6 +503,9 @@ async function init(){
   bumpStreak();
   render();
   if (canSync()) pullCloud();
+  checkUpdate();
+  setInterval(checkUpdate, 5*60*1000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkUpdate(); });
   $('#tabbar').addEventListener('click', e => { const b=e.target.closest('[data-view]'); if(b) setView(b.dataset.view); });
   $('#fab').addEventListener('click', onFab);
   $$('.overlay').forEach(el => el.addEventListener('click', e => { if(e.target===el) el.classList.remove('open'); }));

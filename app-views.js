@@ -227,74 +227,39 @@ function parseIso(iso) { const [y, m, d] = iso.split('-').map(Number); return ne
 function weekOf(iso) { const d = parseIso(iso); const monOffset = (d.getDay() + 6) % 7; const monIso = addDaysIso(iso, -monOffset); const out = []; for (let i = 0; i < 7; i++) out.push(addDaysIso(monIso, i)); return out; }
 function nextFreeStart(iso) { const bs = blocksOn(iso); if (bs.length) { const latestEnd = bs.reduce((mx, b) => Math.max(mx, b.end), DAY_START); const snapped = Math.ceil(latestEnd / 60) * 60; if (snapped + 30 <= DAY_END) return snapped; } if (iso === todayKey()) { const snapped = Math.ceil(nowMin() / 60) * 60; if (snapped >= DAY_START && snapped + 30 <= DAY_END) return snapped; } return DAY_START + 180; }
 
-/* ============================ TIMELINE (project Gantt) ============================ */
-const LABEL_W = 168;
+/* ============================ TIMELINE (vertical number-line of points) ============================ */
 function renderTimeline() {
   const root = $('#v-timeline');
   const active = (state.projects || []).filter(p => p.status === 'active');
-  if (!active.length) {
-    root.innerHTML = `<header class="viewhead"><h1>Timeline</h1></header><div class="empty tl-empty"><div class="tl-empty-mark"></div><p>No active projects yet.</p><p class="tl-empty-sub">Start something and watch it stretch across the weeks.</p></div>`;
-    return;
-  }
-  const sorted = active.slice().sort((a, b) => {
-    const aA = isAssignment(a), bA = isAssignment(b);
-    if (aA !== bA) return aA ? -1 : 1;
-    if (aA && bA) return a.deadline < b.deadline ? -1 : a.deadline > b.deadline ? 1 : 0;
-    const as = a.start || '9999', bs = b.start || '9999';
-    return as < bs ? -1 : as > bs ? 1 : 0;
-  });
+  if (!active.length) { root.innerHTML = `<header class="viewhead"><h1>Timeline</h1></header><div class="empty">No active projects yet.</div>`; return; }
   const today = todayKey();
-  const dayDiff = (a, b) => Math.round((new Date(a + 'T00:00:00') - new Date(b + 'T00:00:00')) / 86400000);
-  const ONGOING_LOOKBACK = 14;
-  let minIso = addDaysIso(today, -7);
-  let maxIso = addDaysIso(today, 21);
-  active.forEach(p => { const s = p.start || addDaysIso(today, -ONGOING_LOOKBACK); if (s < minIso) minIso = s; const e = p.deadline || today; if (e > maxIso) maxIso = e; });
-  const startDow = (new Date(minIso + 'T00:00:00').getDay() + 6) % 7;
-  let winStart = addDaysIso(minIso, -startDow);
-  const endDow = (new Date(maxIso + 'T00:00:00').getDay() + 6) % 7;
-  let winEnd = addDaysIso(maxIso, 6 - endDow);
-  let totalDays = dayDiff(winEnd, winStart) + 1;
-  const MIN_DAYS = 56;
-  if (totalDays < MIN_DAYS) { winEnd = addDaysIso(winStart, MIN_DAYS - 1); totalDays = MIN_DAYS; }
-  const PPD = totalDays <= 84 ? 13 : totalDays <= 140 ? 10 : 8;
-  const chartW = totalDays * PPD;
-  const x = (iso) => dayDiff(iso, winStart) * PPD;
-  let gridHtml = '';
-  for (let d = 0; d <= totalDays; d += 7) gridHtml += `<div class="tl-week" style="left:${d * PPD}px"></div>`;
-  let monthHtml = '';
-  { const sd = new Date(winStart + 'T00:00:00'); let cur = new Date(sd.getFullYear(), sd.getMonth(), 1); if (cur < sd) cur = new Date(sd.getFullYear(), sd.getMonth() + 1, 1);
-    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    monthHtml += `<div class="tl-month-label" style="left:2px">${MONTHS[sd.getMonth()]}</div>`;
-    while (true) { const iso = keyOfDate(cur); if (iso > winEnd) break; const left = x(iso); monthHtml += `<div class="tl-month" style="left:${left}px"></div>`; monthHtml += `<div class="tl-month-label" style="left:${left + 5}px">${MONTHS[cur.getMonth()]}</div>`; cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1); } }
-  const todayX = x(today);
-  const todayInRange = today >= winStart && today <= winEnd;
-  const rowsHtml = sorted.map(p => {
-    const ass = isAssignment(p); const pr = progress(p); const ratio = pr.total ? pr.done / pr.total : 0;
-    const sIso = p.start || addDaysIso(today, -ONGOING_LOOKBACK); const eIso = ass ? p.deadline : today;
-    const bx = Math.max(0, x(sIso < winStart ? winStart : sIso));
-    const ex = Math.min(chartW, x(eIso > winEnd ? winEnd : eIso));
-    const barW = Math.max(PPD * 1.2, ex - bx);
-    const du = ass ? daysUntil(p.deadline) : null;
-    const urgent = ass && du !== null && du <= 2; const overdue = ass && du !== null && du < 0;
-    const barCls = ['tl-bar', ass ? 'is-assignment' : 'is-ongoing', urgent ? 'is-urgent' : '', overdue ? 'is-overdue' : ''].filter(Boolean).join(' ');
-    const fillPct = Math.round(ratio * 100); const progLabel = pr.total ? `${pr.done}/${pr.total}` : '';
-    let flagHtml = '';
-    if (ass && p.deadline >= winStart && p.deadline <= winEnd) flagHtml = `<div class="tl-flag ${urgent ? 'is-urgent' : ''}" style="left:${x(p.deadline)}px"><span class="tl-flag-dot"></span><span class="tl-flag-label">${escapeHtml(fmtDeadline(p.deadline))}</span></div>`;
-    return `<div class="tl-row" role="button" tabindex="0" data-id="${escapeHtml(String(p.id))}" aria-label="${escapeHtml(p.title || 'Untitled')}">
-        <div class="tl-label"><span class="tl-label-dot ${ass ? 'is-assignment' : 'is-ongoing'}"></span><span class="tl-label-text"><span class="tl-title">${escapeHtml(p.title || 'Untitled')}</span>${progLabel ? `<span class="tl-prog">${progLabel}</span>` : ''}</span></div>
-        <div class="tl-track"><div class="${barCls}" style="left:${bx}px;width:${barW}px" title="${escapeHtml(p.title || '')}${ass ? ' · ' + escapeHtml(fmtDeadline(p.deadline)) : ' · ongoing'}"><div class="tl-bar-fill" style="width:${fillPct}%"></div>${!ass ? '<div class="tl-bar-open"></div>' : ''}<span class="tl-bar-cap">${progLabel || (ass ? '' : 'ongoing')}</span></div>${flagHtml}</div>
-      </div>`;
-  }).join('');
-  root.innerHTML = `
-    <header class="viewhead"><h1>Timeline</h1><div class="tl-legend"><span class="tl-leg"><i class="tl-leg-sw is-assignment"></i>Assignment</span><span class="tl-leg"><i class="tl-leg-sw is-ongoing"></i>Ongoing</span><span class="tl-leg"><i class="tl-leg-sw is-done"></i>Done</span></div></header>
-    <div class="tl-wrap"><div class="tl-scroll"><div class="tl-canvas" style="--chart-w:${chartW}px;--ppd:${PPD}px">
-      <div class="tl-axis" style="width:${chartW}px">${monthHtml}</div>
-      <div class="tl-grid-layer" style="width:${chartW}px">${gridHtml}${monthHtml.replace(/tl-month-label[^]*?<\/div>/g, '')}${todayInRange ? `<div class="tl-today" style="left:${todayX}px"><span class="tl-today-badge">today</span></div>` : ''}</div>
-      <div class="tl-rows" style="width:${chartW}px">${rowsHtml}</div>
-    </div></div></div>`;
-  $$('.tl-row', root).forEach(row => { const open = () => openDetail('project', row.dataset.id); row.addEventListener('click', open); row.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }); });
-  const scroller = $('.tl-scroll', root);
-  if (scroller && todayInRange) requestAnimationFrame(() => { const target = todayX - scroller.clientWidth * 0.4 + LABEL_W; scroller.scrollLeft = Math.max(0, target); });
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmtFull = iso => { const d = new Date(iso + 'T00:00:00'); return `${MON[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; };
+  const rel = iso => { const n = daysUntil(iso); if (n === 0) return 'today'; if (n > 0) return n === 1 ? 'tomorrow' : (n < 60 ? `in ${n} days` : `in ${Math.round(n / 30)} months`); const a = -n; return a === 1 ? 'yesterday' : (a < 60 ? `${a} days ago` : `${Math.round(a / 30)} months ago`); };
+  const repDate = p => p.deadline || p.start || today;
+  // each project/assignment is one point, placed in date order (evenly spaced — span-agnostic)
+  const items = active.map(p => ({ p, date: repDate(p), ass: isAssignment(p) })).sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  const todayNode = `<div class="vt-node vt-today"><div class="vt-rail"><span class="vt-dot vt-dot-today"></span></div><div class="vt-main"><div class="vt-now"><span class="vt-now-lbl">Today</span><span class="vt-date">${fmtFull(today)}</span></div></div></div>`;
+  let nodes = '', inserted = false;
+  items.forEach(it => {
+    if (!inserted && it.date > today) { nodes += todayNode; inserted = true; }
+    const p = it.p, pr = progress(p), pct = pr.total ? Math.round(pr.done / pr.total * 100) : 0;
+    const n = daysUntil(it.date), past = it.date < today;
+    const urgent = it.ass && n >= 0 && n <= 2, overdue = it.ass && n < 0;
+    const dotCls = 'vt-dot' + (it.ass ? ' vt-dot-ass' : ' vt-dot-ongoing') + ((urgent || overdue) ? ' vt-dot-urgent' : '') + (past ? ' vt-dot-past' : '');
+    const tag = overdue ? 'Overdue' : it.ass ? 'Assignment' : 'Ongoing';
+    nodes += `<div class="vt-node${past ? ' is-past' : ''}" data-id="${p.id}" role="button" tabindex="0">
+      <div class="vt-rail"><span class="${dotCls}"></span></div>
+      <div class="vt-main"><div class="vt-card">
+        <div class="vt-card-top"><span class="vt-title">${escapeHtml(p.title)}</span><span class="vt-tag${(urgent || overdue) ? ' urgent' : ''}">${tag}</span></div>
+        <div class="vt-meta"><span class="vt-date">${fmtFull(it.date)}</span><span class="vt-rel${(urgent || overdue) ? ' urgent' : ''}">· ${rel(it.date)}</span>${pr.total ? `<span class="vt-prog">${pr.done}/${pr.total}</span>` : ''}</div>
+        ${pr.total ? `<div class="vt-bar"><i style="width:${pct}%"></i></div>` : ''}
+      </div></div>
+    </div>`;
+  });
+  if (!inserted) nodes += todayNode;
+  root.innerHTML = `<header class="viewhead"><h1>Timeline</h1></header><div class="vt">${nodes}</div>`;
+  $$('.vt-node[data-id]', root).forEach(el => { const open = () => openDetail('project', el.dataset.id); el.addEventListener('click', open); el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } }); });
 }
 
 /* ============================ DIARY ============================ */
