@@ -405,6 +405,7 @@ function classifyInbox(id, type){
   const it = state.inbox.find(x => x.id === id); if (!it) return;
   const drop = () => { state.inbox = state.inbox.filter(x => x.id !== id); };
   if (type === 'principle'){ state.principles.push({ id:uid('pr_'), text:it.text, status:'on', note:'' }); drop(); save(); render(); flash('Moved to Principles'); }
+  else if (type === 'tip'){ state.tips.push({ id:uid('tp_'), text:it.text, note:'' }); drop(); save(); render(); flash('Moved to Tips'); }
   else if (type === 'todo'){ state.todos.push({ id:uid('td_'), text:it.text, done:false }); drop(); save(); render(); flash('Moved to To-do'); }
   else if (type === 'someday'){ state.someday.push({ id:uid('sd_'), text:it.text, note:'' }); drop(); save(); render(); flash('Moved to Someday'); }
   else if (type === 'project'){ const pid = addProject(it.text, null); drop(); save(); render(); openDetail('project', pid); }
@@ -643,7 +644,7 @@ function ibCard(item) {
       ibActs('ib-acts') + '</div>';
 }
 function ibActs(cls) {
-  const types = [['principle','Principle'],['todo','To-do'],['project','Project'],['someday','Someday'],['deadline','+ Deadline']];
+  const types = [['principle','Principle'],['tip','Tip'],['todo','To-do'],['project','Project'],['someday','Someday'],['deadline','+ Deadline']];
   let h = '<div class="' + cls + '">';
   for (const [type, label] of types) h += '<button class="ib-pill" type="button" data-type="' + type + '">' + label + '</button>';
   return h + '</div>';
@@ -658,6 +659,7 @@ function renderCapture() {
   html += '<div class="cap-or">or file as</div>';
   html += '<div class="cap-chips">';
   html += '<button class="cap-chip" type="button" data-act="principle">Principle</button>';
+  html += '<button class="cap-chip" type="button" data-act="tip">Tip</button>';
   html += '<button class="cap-chip" type="button" data-act="todo">To-do</button>';
   html += '<button class="cap-chip" type="button" data-act="project">Project</button>';
   html += '<button class="cap-chip" type="button" data-act="someday">Someday</button>';
@@ -671,6 +673,7 @@ function renderCapture() {
       if (!t) { closeOverlay('capture'); return; }
       switch (chip.dataset.act) {
         case 'principle': addPrinciple(t); closeOverlay('capture'); flash('Saved'); break;
+        case 'tip': addTip(t); closeOverlay('capture'); flash('Saved'); break;
         case 'todo': addTodo(t); closeOverlay('capture'); flash('Saved'); break;
         case 'someday': addSomeday(t); closeOverlay('capture'); flash('Saved'); break;
         case 'project': { const id = addProject(t, null); closeOverlay('capture'); openDetail('project', id); break; }
@@ -698,6 +701,7 @@ function renderSort() {
   html += '<div class="sort-text">' + escapeHtml(it.text) + '</div>';
   html += '<div class="sort-acts">';
   html += '<button class="sort-pill" type="button" data-type="principle">Principle</button>';
+  html += '<button class="sort-pill" type="button" data-type="tip">Tip</button>';
   html += '<button class="sort-pill" type="button" data-type="todo">To-do</button>';
   html += '<button class="sort-pill" type="button" data-type="project">Project</button>';
   html += '<button class="sort-pill" type="button" data-type="someday">Someday</button>';
