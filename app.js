@@ -587,8 +587,8 @@ function renderHome(){
     html += '</div>';
   }
 
-  // To-do (open, up to 3)
-  const todos = state.todos.filter(t=>!t.done).slice(0,3);
+  // To-do (all open)
+  const todos = state.todos.filter(t=>!t.done);
   html += hmSec('To-do');
   if (todos.length){ html += '<div class="hm-list">'; todos.forEach(t => html += `<div class="hm-todo"><button class="hm-check" data-todo="${t.id}" aria-label="done"></button><span>${escapeHtml(t.text)}</span></div>`); html += '</div>'; }
   else html += '<div class="empty">Nothing to do.</div>';

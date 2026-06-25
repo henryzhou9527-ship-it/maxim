@@ -37,7 +37,7 @@ body{ font-family:var(--font); color:var(--ink);
 
 /* real responsive app shell — full screen on phones, a centered app panel on desktop */
 .app{ width:100%; max-width:480px; margin:0 auto; display:flex; }
-.screen{ position:relative; flex:1 1 auto; min-height:100dvh; background:var(--paper); display:flex; flex-direction:column; overflow:hidden; }
+.screen{ position:relative; flex:1 1 auto; height:100dvh; max-height:100dvh; min-height:100dvh; background:var(--paper); display:flex; flex-direction:column; overflow:hidden; }
 @media (min-width:520px){
   body{ align-items:center; padding:26px; }
   .app{ height:min(924px, calc(100dvh - 52px)); }
@@ -45,7 +45,7 @@ body{ font-family:var(--font); color:var(--ink);
 }
 
 /* scroll + views */
-.scroll{ flex:1 1 auto; overflow-y:auto; scrollbar-width:none; padding:calc(env(safe-area-inset-top) + 16px) 20px 124px; }
+.scroll{ flex:1 1 auto; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; padding:calc(env(safe-area-inset-top) + 16px) 20px 124px; }
 .scroll::-webkit-scrollbar{ display:none; }
 .view{ display:none; }
 .view.on{ display:block; animation:viewin .26s ease; }
