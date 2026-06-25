@@ -571,8 +571,8 @@ function renderHome(){
     html += '</div>';
   }
 
-  // Principles (on, up to 4) — the dark "rock" you stand on
-  const prins = state.principles.filter(p=>p.status==='on').slice(0,4);
+  // Principles (all on) — the dark "rock" you stand on
+  const prins = state.principles.filter(p=>p.status==='on');
   if (prins.length){
     html += hmSec('Principles') + '<div class="hm-rocks">';
     prins.forEach(p => html += `<div class="hm-rock" data-prin="${p.id}"><span class="hm-rock-dot"></span><span class="hm-rock-t">${escapeHtml(p.text)}</span></div>`);
@@ -580,7 +580,7 @@ function renderHome(){
   }
 
   // Tips (soft, optional — lighter than principles)
-  const tips = state.tips.slice(0,3);
+  const tips = state.tips;
   if (tips.length){
     html += hmSec('Tips') + '<div class="hm-tips">';
     tips.forEach(t => html += `<div class="hm-tip" data-tip="${t.id}"><span class="hm-tip-dot"></span><span class="hm-tip-t">${escapeHtml(t.text)}</span></div>`);
